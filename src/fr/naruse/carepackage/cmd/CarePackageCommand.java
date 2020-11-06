@@ -11,6 +11,7 @@ import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -112,6 +113,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //RELOAD
         if(args[0].equalsIgnoreCase("reload")){
+            CarePackageType.clear();
             pl.getConfigurations().reload();
             pl.getCarePackages().reload();
             return sendMessage(sender, "reloaded");
@@ -169,9 +171,16 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //CREATE MODEL
         if(args[0].equalsIgnoreCase("createModel")){
-            if(args.length < 2){
+            if(args.length < 3){
                 return help(sender, 1);
             }
+            int radius;
+            try{
+                radius = Integer.valueOf(args[2]);
+            }catch (Exception e){
+                return sendMessage(sender, "wrongNumber");
+            }
+
             CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
             if(type != null){
                 return sendMessage(sender, "modelAlreadyUsed");
@@ -195,14 +204,22 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             Location origin = p.getLocation();
 
+            configuration.set("name", args[1]);
+            configuration.set("radius", radius);
+
             List<Block> list = Utils.blocksFromTwoPoints(block.getLocation(), block2.getLocation());
+            int count = 0;
             for (int i = 0; i < list.size(); i++) {
                 Block b = list.get(i);
-                configuration.set(i+".x", b.getX()-origin.getBlockX());
-                configuration.set(i+".y", b.getY()-origin.getBlockY());
-                configuration.set(i+".z", b.getZ()-origin.getBlockZ());
-                configuration.set(i+".type", b.getTypeId());
-                configuration.set(i+".data", b.getData());
+                if(b.getType() == Material.AIR){
+                    continue;
+                }
+                configuration.set(count+".x", b.getX()-origin.getBlockX());
+                configuration.set(count+".y", b.getY()-origin.getBlockY());
+                configuration.set(count+".z", b.getZ()-origin.getBlockZ());
+                configuration.set(count+".type", b.getTypeId());
+                configuration.set(count+".data", b.getData());
+                count++;
             }
             pl.getConfigurations().saveConfigs();
 
@@ -236,7 +253,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendNormalMessage(sender, "§6/§7cp reload");
             sendNormalMessage(sender, "§6/§7cp spawn <CarePackage Name>");
             sendNormalMessage(sender, "§6/§7cp setInventory <CarePackage Name>");
-            sendNormalMessage(sender, "§6/§7cp createModel <Model Name> §7(With WorldEdit)");
+            sendNormalMessage(sender, "§6/§7cp createModel <Model Name> <Radius> §7(With WorldEdit)");
             sendNormalMessage(sender, "§6/§7cp deleteModel <Model Name>");
             sendNormalMessage(sender, "§bPage: §21/2");
         }else if(page == 2){

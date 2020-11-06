@@ -16,7 +16,7 @@ public class CarePackageType {
 
     private static final List<CarePackageType> carePackageTypes = Lists.newArrayList();
     private static final Map<String, CarePackageType> carePackageTypeMap = Maps.newHashMap();
-    private static final Map<CarePackageType, CarePackageCustom> carePackageCloneMap = Maps.newHashMap();
+    private static final Map<CarePackageType, Model> modelMap = Maps.newHashMap();
 
     public static final CarePackageType SIMPLE = new CarePackageType(CarePackageSimple.class, "SIMPLE", false);
 
@@ -26,7 +26,7 @@ public class CarePackageType {
 
     private Class clazz;
     private String name;
-    private boolean isCustom = false;
+    private boolean isCustom;
     public CarePackageType(Class<? extends CarePackage> clazz, String name, boolean isCustom) {
         this.clazz = clazz;
         this.name = name;
@@ -38,21 +38,34 @@ public class CarePackageType {
     }
 
     public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory){
-        if(isCustom){
-            if(carePackageCloneMap.containsKey(this)){
-                return carePackageCloneMap.get(this).clone();
-            }
-        }
         try{
-            Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class);
-            return constructor.newInstance(pl, name, location, inventory);
+            if(isCustom){
+                if(!modelMap.containsKey(this)){
+                    return null;
+                }
+                Model model = modelMap.get(this);
+                Constructor<CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(), Location.class, Inventory.class, Model.class);
+                return constructor.newInstance(pl, name, this, location, inventory, model);
+            }else{
+                Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class);
+                return constructor.newInstance(pl, name, location, inventory);
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
         return null;
     }
 
+    public void registerCustomModel(String name, List<BlockInfo> blockInfos, int radius){
+        if(modelMap.containsKey(this)){
+            return;
+        }
+        Model model = new Model(name, blockInfos, radius);
+        modelMap.put(this, model);
+    }
+
     public static CarePackageType registerCarePackage(String name){
+        name = name.toUpperCase();
         if(carePackageTypeMap.containsKey(name)){
             return null;
         }

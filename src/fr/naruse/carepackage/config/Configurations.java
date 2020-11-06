@@ -2,6 +2,7 @@ package fr.naruse.carepackage.config;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import fr.naruse.carepackage.carepackage.CarePackageType;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,6 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.*;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 public class Configurations {
     private JavaPlugin pl;
@@ -47,6 +49,14 @@ public class Configurations {
                     if(file.isFile() && file.getName().contains(".yml")){
                         FileConfiguration configuration = new YamlConfiguration();
                         configuration.load(file);
+                        if(configuration.getString("name") != null){
+                            CarePackageType type = CarePackageType.registerCarePackage(configuration.getString("name"));
+                            if(type == null){
+                                pl.getLogger().log(Level.SEVERE, "Can't register CarePackageType '"+configuration.getString("name")+"'");
+                            }else{
+                                pl.getLogger().log(Level.INFO, "CarePackageType '"+configuration.getString("name")+"' registered");
+                            }
+                        }
                         models.add(configuration);
                         modelMap.put(file.getName().replace(".yml", ""), configuration);
                         configurationFile.put(configuration, file);

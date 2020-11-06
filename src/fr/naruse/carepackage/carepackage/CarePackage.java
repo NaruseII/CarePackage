@@ -22,6 +22,7 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
 
 public abstract class CarePackage extends BukkitRunnable implements Listener {
 
@@ -70,7 +71,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             secondCount++;
             this.onSecond();
             if(!isLanded){
-                //this.targetDestination();
+                this.targetDestination();
             }else{
                 if(secondCountLanded >= 60){
                     destroy();
@@ -86,7 +87,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             tickCount++;
         }
         this.onTick();
-        //playBoosterParticles();
+        playBoosterParticles();
     }
 
     protected abstract void buildEntities();
@@ -195,6 +196,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         this.isSpawned = true;
         if(!canSpawn()){
             isSpawned = false;
+            pl.getLogger().log(Level.INFO, "Can't spawn '"+type.getName()+"'");
             return;
         }
         buildEntities();

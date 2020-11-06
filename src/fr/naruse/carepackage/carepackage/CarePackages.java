@@ -28,15 +28,54 @@ public class CarePackages {
         for (CarePackage carePackage : carePackages) {
             carePackage.disable();
         }
-        CarePackageType.clear();
         carePackages.clear();
+
+        int modelCount = 0;
+        for (FileConfiguration model : pl.getConfigurations().getModels()) {
+            String name = model.getString("name");
+            int radius = model.getInt("radius");
+            if(name == null){
+                pl.getLogger().warning("[Model] File '"+model.getName()+"' badly formatted");
+                continue;
+            }
+
+            int id = getIdFromName(name);
+            if(id == -1){
+                pl.getLogger().warning("[Model] Care Package '"+name+"' not found in config file");
+                return;
+            }
+
+            CarePackageType carePackageType = CarePackageType.valueOf(name.toUpperCase());
+            if(carePackageType == null){
+                pl.getLogger().warning("[Model] Care Package with name '"+name+"' already exists. From model '"+model.getName()+"'");
+                continue;
+            }
+
+            List<BlockInfo> blockInfos = Lists.newArrayList();
+
+            for (int i = 0; i < Integer.MAX_VALUE; i++) {
+                if(!model.contains(i+"")){
+                    break;
+                }
+                BlockInfo location = Utils.getConfigBlockInfo(model, i+"");
+                if(location == null){
+                    pl.getLogger().warning("[Model] Block with id in config '"+i+"' not found for Care Package '"+name+"' in model '"+model.getName()+"'");
+                    continue;
+                }
+                blockInfos.add(location);
+            }
+
+            carePackageType.registerCustomModel(name, blockInfos, radius);
+            modelCount++;
+        }
+
         for (int i = 0; i < 99999; i++) {
             if(pl.getConfig().contains("cp."+i+".name")) {
                 String name = pl.getConfig().getString("cp." + i + ".name");
 
                 CarePackageType carePackageType = CarePackageType.valueOf(pl.getConfig().getString("cp."+i+".type"));
                 if(carePackageType == null){
-                    pl.getLogger().warning("can't recognize CarePackageType for Care Package '"+name+"'");
+                    pl.getLogger().warning("Can't recognize CarePackageType for Care Package '"+name+"'");
                     continue;
                 }
 
@@ -55,59 +94,14 @@ public class CarePackages {
                 }
 
                 CarePackage carePackage = carePackageType.build(pl, name, destination, inventory);
+                if(carePackages == null){
+                    pl.getLogger().warning("Can't find model for '"+name+"'");
+                    continue;
+                }
                 carePackages.add(carePackage);
             }
         }
-        for (FileConfiguration model : pl.getConfigurations().getModels()) {
-            String name = model.getString("name");
-            if(name == null){
-                pl.getLogger().warning("[Model] File '"+model.getName()+"' badly formatted");
-                continue;
-            }
-
-            int id = getIdFromName(name);
-            if(id == -1){
-                pl.getLogger().warning("[Model] Care Package '"+name+"' not found");
-                return;
-            }
-
-            Location destination = Utils.getConfigLocation(pl.getConfig(), "cp."+id+".location.destination");
-            if(destination == null){
-                pl.getLogger().warning("[Model] Location DESTINATION not found for Care Package '"+name+"'");
-                continue;
-            }
-
-            CarePackageType carePackageType = CarePackageType.registerCarePackage(name);
-            if(carePackageType == null){
-                pl.getLogger().warning("[Model] Care Package with name '"+name+"' already exists. From model '"+model.getName()+"'");
-                continue;
-            }
-
-            Inventory inventory = Bukkit.createInventory(null, 9*6, pl.getMessageManager().get("inventory.get.name"));
-            for (int o = 0; o < 9*6; o++) {
-                if(pl.getConfig().contains("cp."+id+".inventory."+o)) {
-                    ItemStack item = ItemStackSerializer.deserialize(pl.getConfig().getString("cp."+id+".inventory."+o));
-                    inventory.setItem(o, item);
-                }
-            }
-
-            List<BlockInfo> blockInfos = Lists.newArrayList();
-
-            for (int i = 0; i < Integer.MAX_VALUE; i++) {
-                if(!model.contains(i+"")){
-                    break;
-                }
-                BlockInfo location = Utils.getConfigBlockInfo(model, i+"");
-                if(location == null){
-                    pl.getLogger().warning("[Model] Block with id in config '"+i+"' not found for Care Package '"+name+"' in model '"+model.getName()+"'");
-                    continue;
-                }
-                blockInfos.add(location);
-            }
-
-            CarePackageCustom carePackageCustom = (CarePackageCustom) carePackageType.build(pl, name, destination, inventory);
-            carePackageCustom.setBlockInfos(blockInfos);
-        }
+        pl.getLogger().log(Level.INFO, ""+modelCount+" Models found");
         pl.getLogger().log(Level.INFO, ""+carePackages.size()+" Care Packages found");
     }
 

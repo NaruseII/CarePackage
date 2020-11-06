@@ -1,0 +1,7 @@
+name: CarePackage
+version: 1.0.0
+author: Naruse
+main: fr.naruse.carepackage.main.CarePackagePlugin
+commands:
+  cp:
+  carepackage:

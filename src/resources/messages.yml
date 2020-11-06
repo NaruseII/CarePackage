@@ -1,0 +1,30 @@
+english:
+  commands:
+    onlyForPlayers: "§cCommands only for players."
+    youDontHaveThePermission: "§4You do not have this permission."
+    wrongNumber: "§cWrong number."
+    typeNotFound: "§cType not found."
+    created: "§aCare Package created."
+    alreadyUsed: "§cName already used."
+    carePackageNotFound: "§cCare Package '{name}' not found."
+    deleted: "§aCare Package deleted."
+    destinationSetted: "§aDestination saved."
+    reloaded: "§aCare Packages reloaded."
+    argumentNotFound: "§cArgument '{arg}' not found."
+    spawned: "§aCare Package spawned."
+
+
+french:
+  commands:
+    onlyForPlayers: "§cCommandes seulement pour les joueurs."
+    youDontHaveThePermission: "§4Vous n'avez pas la permission."
+    wrongNumber: "§cNombre incorrect."
+    typeNotFound: "§cType introuvable."
+    created: "§aCare Package créé."
+    alreadyUsed: "§cNom déjà utilisé."
+    carePackageNotFound: "§cCare Package '{name}' introuvable."
+    deleted: "§aCare Package supprimé."
+    destinationSetted: "§aDestination enregistrée."
+    reloaded: "§aCare Packages rechargés."
+    argumentNotFound: "§cArgument '{arg}' introuvable."
+    spawned: "§aCare Package apparu."

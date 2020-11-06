@@ -1,11 +1,10 @@
 package fr.naruse.carepackage.utils;
 
 import com.google.common.collect.Lists;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import fr.naruse.carepackage.main.CarePackagePlugin;
+import fr.naruse.carepackage.carepackage.BlockInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,6 +34,22 @@ public class Utils {
             return null;
         }
         return new Location(world, x, y, z, yaw, pitch);
+    }
+
+    public static BlockInfo getConfigBlockInfo(FileConfiguration config, String path) {
+        if(!config.contains(path+".x")){
+            return null;
+        }
+        try{
+            Material m = Material.getMaterial(config.getInt(path+".type"));
+            byte data = (byte) config.getInt(path+".data");
+            int x = config.getInt(path+".x");
+            int y = config.getInt(path+".y");
+            int z = config.getInt(path+".z");
+            return new BlockInfo(m, data, x, y, z);
+        }catch (Exception e){
+            return null;
+        }
     }
 
     public static List<Block> getCircle(Location center, int r){

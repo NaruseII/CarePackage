@@ -52,20 +52,17 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             if(args.length < 3){
                 return help(sender, 1);
             }
-            CarePackageType type;
-            try{
-                type = CarePackageType.valueOf(args[2].toUpperCase());
-            }catch (Exception e){
+            CarePackageType type = CarePackageType.valueOf(args[2].toUpperCase());
+            if(type == null){
                 return sendMessage(sender, "typeNotFound");
             }
 
-            if(getIdFromName(args[1]) !=
-                    -1){
+            if(getIdFromName(args[1]) != -1){
                 return sendMessage(sender, "alreadyUsed");
             }
 
             int id = getAvailableId();
-            pl.getConfig().set("cp."+id+".type", type.name());
+            pl.getConfig().set("cp."+id+".type", type.getName());
             pl.getConfig().set("cp."+id+".name", args[1]);
             pl.saveConfig();
 
@@ -229,8 +226,8 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
         List<String> list = Lists.newArrayList();
         if(args.length == 3 && args[0].equalsIgnoreCase("create")){
             for (CarePackageType type : CarePackageType.values()) {
-                if(type.name().contains(args[2].toUpperCase())){
-                    list.add(type.name());
+                if(type.getName().contains(args[2].toUpperCase())){
+                    list.add(type.getName());
                 }
             }
         }

@@ -12,6 +12,12 @@ english:
     reloaded: "§aCare Packages reloaded."
     argumentNotFound: "§cArgument '{arg}' not found."
     spawned: "§aCare Package spawned."
+  inventory:
+    set:
+      name: "§4§lCare Package's items"
+      saved: "§aCare Package {name}'s inventory saved."
+    get:
+      name: "§4§lCare Package's inventory"
 
 
 french:
@@ -28,3 +34,9 @@ french:
     reloaded: "§aCare Packages rechargés."
     argumentNotFound: "§cArgument '{arg}' introuvable."
     spawned: "§aCare Package apparu."
+  inventory:
+    set:
+      name: "§4§lItems du Care Package"
+      saved: "§aL'inventaire du Care Package '{name}' est enregistré."
+    get:
+      name: "§4§lInventaire du Care Package"

@@ -7,6 +7,7 @@ import fr.naruse.carepackage.main.CarePackagePlugin;
 import net.minecraft.server.v1_12_R1.EnumParticle;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.inventory.Inventory;
 
 public class CarePackageSimple extends CarePackage {
 
@@ -17,13 +18,13 @@ public class CarePackageSimple extends CarePackage {
             new ParticleInfo(EnumParticle.SMOKE_NORMAL, 1, 20),
     };
 
-    public CarePackageSimple(CarePackagePlugin pl, String name, Location destination) {
-        super(pl, name, CarePackageType.SIMPLE_CARE_PACKAGE, destination);
+    public CarePackageSimple(CarePackagePlugin pl, String name, Location destination, Inventory inventory) {
+        super(pl, name, CarePackageType.SIMPLE, destination, inventory);
     }
 
     @Override
     protected void buildEntities() {
-        Location origin = spawn.clone();
+        Location origin = destination.clone().add(0, 8, 0);
         Location location = origin.clone();
         createArmorStand(location, Material.STAINED_CLAY, (byte) 7);
         location.add(-0.28, 0, -0.128);

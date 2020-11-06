@@ -1,33 +1,36 @@
 package fr.naruse.carepackage.utils;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.util.NumberConversions;
 
 import java.util.List;
 
 public class Utils {
 
-    public static Location getConfigLocation(CarePackagePlugin pl, String path) {
-        if(!pl.getConfig().contains(path+".x")){
+    public static Location getConfigLocation(FileConfiguration config, String path) {
+        if(!config.contains(path+".x")){
             return null;
         }
-        double x = pl.getConfig().getDouble(path+".x");
-        double y = pl.getConfig().getDouble(path+".y");
-        double z = pl.getConfig().getDouble(path+".z");
+        double x = config.getDouble(path+".x");
+        double y = config.getDouble(path+".y");
+        double z = config.getDouble(path+".z");
         int yaw = 0;
         int pitch = 0;
-        if(pl.getConfig().contains(path+".yaw")){
-            yaw = pl.getConfig().getInt(path+".yaw");
-            pitch = pl.getConfig().getInt(path+".pitch");
+        if(config.contains(path+".yaw")){
+            yaw = config.getInt(path+".yaw");
+            pitch = config.getInt(path+".pitch");
         }
         World world;
         try{
-            world = Bukkit.getWorld(pl.getConfig().getString(path+".world"));
+            world = Bukkit.getWorld(config.getString(path+".world"));
         } catch (Exception e){
             return null;
         }

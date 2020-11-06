@@ -8,15 +8,14 @@ import net.minecraft.server.v1_12_R1.PacketPlayOutWorldParticles;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.EntityBlockFormEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
@@ -32,18 +31,21 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     protected final CarePackageType type;
     protected final Location destination;
     protected final String name;
+    protected final Inventory inventory;
 
     protected Location spawn;
     private Vector vector;
     protected boolean isSpawned = false;
+    protected boolean isLanded = false;
     protected final List<Entity> entities = Lists.newArrayList();
     protected final List<Entity> boosters = Lists.newArrayList();
 
-    public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination) {
+    public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory) {
         this.pl = pl;
         this.name = name;
         this.type = type;
         this.destination = destination;
+        this.inventory = inventory;
 
         this.spawn = destination.clone();
         spawn.setY(spawn.getWorld().getMaxHeight()+50);
@@ -57,6 +59,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     private int tickCount = 0;
     private int secondCount = 0;
+    private int secondCountLanded = 0;
     @Override
     public void run() {
         if(!isSpawned){
@@ -66,7 +69,16 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             tickCount = 0;
             secondCount++;
             this.onSecond();
-            this.targetDestination();
+            if(!isLanded){
+                //this.targetDestination();
+            }else{
+                if(secondCountLanded >= 60){
+                    destroy();
+                    return;
+                }else{
+                    secondCountLanded++;
+                }
+            }
             for (int i = 0; i < entities.size(); i++) {
                 entities.get(i).setTicksLived(1);
             }
@@ -74,7 +86,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             tickCount++;
         }
         this.onTick();
-        playBoosterParticles();
+        //playBoosterParticles();
     }
 
     protected abstract void buildEntities();
@@ -131,6 +143,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             if(destination.distance(closest) <= 6){
                 getBoosterParticle()[0].setCount(6);
                 setSpeed(new Vector(0, 0, 0));
+                isLanded = true;
             }
         }
     }
@@ -189,6 +202,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     public void destroy(){
         this.isSpawned = false;
+        this.isLanded = false;
         for (Entity e : entities) {
             e.remove();
         }
@@ -284,6 +298,9 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     public void interact(PlayerInteractAtEntityEvent e){
         if(e.getRightClicked() != null && entities.contains(e.getRightClicked())){
             e.setCancelled(true);
+            if(isLanded){
+                e.getPlayer().openInventory(inventory);
+            }
         }
     }
 

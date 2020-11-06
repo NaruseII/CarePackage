@@ -3,6 +3,7 @@ package fr.naruse.carepackage.cmd;
 import com.google.common.collect.Lists;
 import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackageType;
+import fr.naruse.carepackage.inventory.InventorySet;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -107,6 +108,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //RELOAD
         if(args[0].equalsIgnoreCase("reload")){
+            pl.getConfigurations().reload();
             pl.getCarePackages().reload();
             return sendMessage(sender, "reloaded");
         }
@@ -148,6 +150,18 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             return sendMessage(sender, "spawned");
         }
 
+        //SET INVENTORY
+        if(args[0].equalsIgnoreCase("setInventory")){
+            if(args.length < 2){
+                return help(sender, 1);
+            }
+            int id = getIdFromName(args[1]);
+            if(id == -1){
+                return sendMessage(sender, "carePackageNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+            new InventorySet(pl, p, id, args[1]);
+            return true;
+        }
         return false;
     }
 
@@ -160,7 +174,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendNormalMessage(sender, "§6/§7cp reload");
             sendNormalMessage(sender, "§6/§7cp setLang <French, English>");
             sendNormalMessage(sender, "§6/§7cp spawn <CarePackage Name>");
-            sendNormalMessage(sender, "§6/§7cp ");
+            sendNormalMessage(sender, "§6/§7cp setInventory <CarePackage Name>");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§bPage: §21/1");
         }

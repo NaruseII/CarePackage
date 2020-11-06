@@ -67,4 +67,23 @@ public class Utils {
     public static double distanceXZ(Location location, Location destination) {
         return Math.sqrt(NumberConversions.square(location.getX() - destination.getX()) + NumberConversions.square(location.getY() - destination.getY()) + NumberConversions.square(location.getZ() - destination.getZ()));
     }
+
+    public static List<Block> blocksFromTwoPoints(Location loc1, Location loc2) {
+        List<Block> blocks = Lists.newArrayList();
+        int topBlockX = (loc1.getBlockX() < loc2.getBlockX() ? loc2.getBlockX() : loc1.getBlockX());
+        int bottomBlockX = (loc1.getBlockX() > loc2.getBlockX() ? loc2.getBlockX() : loc1.getBlockX());
+        int topBlockY = (loc1.getBlockY() < loc2.getBlockY() ? loc2.getBlockY() : loc1.getBlockY());
+        int bottomBlockY = (loc1.getBlockY() > loc2.getBlockY() ? loc2.getBlockY() : loc1.getBlockY());
+        int topBlockZ = (loc1.getBlockZ() < loc2.getBlockZ() ? loc2.getBlockZ() : loc1.getBlockZ());
+        int bottomBlockZ = (loc1.getBlockZ() > loc2.getBlockZ() ? loc2.getBlockZ() : loc1.getBlockZ());
+        for(int x = bottomBlockX; x <= topBlockX; x++) {
+            for(int z = bottomBlockZ; z <= topBlockZ; z++) {
+                for(int y = bottomBlockY; y <= topBlockY; y++) {
+                    Block block = loc1.getWorld().getBlockAt(x, y, z);
+                    blocks.add(block);
+                }
+            }
+        }
+        return blocks;
+    }
 }

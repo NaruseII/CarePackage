@@ -12,6 +12,9 @@ english:
     reloaded: "§aCare Packages reloaded."
     argumentNotFound: "§cArgument '{arg}' not found."
     spawned: "§aCare Package spawned."
+    modelAlreadyUsed: "§cModel name already used."
+    modelCreated: "§aModel created."
+    worldEditNotFound: "§cWorldEdit not found."
   inventory:
     set:
       name: "§4§lCare Package's items"
@@ -34,6 +37,9 @@ french:
     reloaded: "§aCare Packages rechargés."
     argumentNotFound: "§cArgument '{arg}' introuvable."
     spawned: "§aCare Package apparu."
+    modelAlreadyUsed: "§cNom de model déjà utilisé."
+    modelCreated: "§aModel créé."
+    worldEditNotFound: "§cWorldEdit introuvable."
   inventory:
     set:
       name: "§4§lItems du Care Package"

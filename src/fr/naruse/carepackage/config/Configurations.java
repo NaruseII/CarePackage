@@ -1,20 +1,26 @@
 package fr.naruse.carepackage.config;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 public class Configurations {
     private JavaPlugin pl;
+
+    private File carePackageModelFile;
 
     private File messageFile;
     private FileConfiguration messageConfiguration;
 
     private List<FileConfiguration> models = Lists.newArrayList();
+    private Map<String, FileConfiguration> modelMap = Maps.newHashMap();
+    private Map<FileConfiguration, File> configurationFile = Maps.newHashMap();
 
     public Configurations(JavaPlugin pl) {
         this.pl = pl;
@@ -25,7 +31,7 @@ public class Configurations {
         this.models.clear();
         this.messageFile = new File(pl.getDataFolder(), "messages.yml");
         this.messageConfiguration = new YamlConfiguration();
-        File carePackageModelFile = new File(pl.getDataFolder(), "model");
+        this.carePackageModelFile = new File(pl.getDataFolder(), "model");
 
         try{
             if(!carePackageModelFile.exists()){
@@ -42,6 +48,8 @@ public class Configurations {
                         FileConfiguration configuration = new YamlConfiguration();
                         configuration.load(file);
                         models.add(configuration);
+                        modelMap.put(file.getName().replace(".yml", ""), configuration);
+                        configurationFile.put(configuration, file);
                     }
                 }
             }
@@ -77,6 +85,10 @@ public class Configurations {
     public void saveConfigs() {
         try{
             messageConfiguration.save(messageFile);
+            for (FileConfiguration model : models) {
+                File f = configurationFile.get(model);
+                model.save(f);
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -97,6 +109,24 @@ public class Configurations {
 
     public List<FileConfiguration> getModels() {
         return models;
+    }
+
+    public FileConfiguration createConfigurationModel(String name) {
+        File file = new File(carePackageModelFile, name+".yml");
+        FileConfiguration configuration = new YamlConfiguration();
+        try{
+            if(!file.exists()){
+                file.createNewFile();
+            }
+            configuration.load(file);
+            models.add(configuration);
+            modelMap.put(name, configuration);
+            configurationFile.put(configuration, file);
+            return configuration;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 

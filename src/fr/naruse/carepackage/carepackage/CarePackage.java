@@ -48,7 +48,8 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     private final int soundBarrierEffectRadius;
     private final double speedReducer;
     private final int randomXZSpawnRange;
-    private final int secondBeforeDespawn;
+    private final int secondBeforeRemove;
+    private final int timeBeforeBarrierEffect;
 
     public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory) {
         this.pl = pl;
@@ -61,7 +62,8 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         this.soundBarrierEffectRadius = pl.getConfig().getInt("soundBarrierEffectRadius");
         this.speedReducer = pl.getConfig().getDouble("speedReducer");
         this.randomXZSpawnRange = pl.getConfig().getInt("randomXZSpawnRange");
-        this.secondBeforeDespawn = pl.getConfig().getInt("secondBeforeDespawn");
+        this.secondBeforeRemove = pl.getConfig().getInt("secondBeforeRemove");
+        this.timeBeforeBarrierEffect = pl.getConfig().getInt("timeBeforeBarrierEffect");
 
         this.spawn = destination.clone();
         spawn.setY(destination.getY()+spawn.getWorld().getMaxHeight());
@@ -88,7 +90,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             if(!isLanded){
                 this.targetDestination();
             }else{
-                if(secondCountLanded >= 60){
+                if(secondCountLanded >= secondBeforeRemove){
                     destroy();
                     return;
                 }else{
@@ -119,11 +121,10 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         if(entities.size() == 0){
             return;
         }
-        Location location =
-                closestEntity.getLocation();
+        Location location = closestEntity.getLocation();
         double distance = Utils.distanceY(location, destination);
 
-        if(secondCount == 5 || secondCount == 10){
+        if(secondCount == timeBeforeBarrierEffect){
             playSoundBarrierBreakParticles();
         }
 
@@ -146,8 +147,14 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             reduceSpeedTo(vector.clone().multiply(0.8));
         }else if(distance > 5){
             reduceSpeedTo(vector.clone().multiply(0.3));
-        }else if(distance > 0.5){
+        }else if(distance > 2){
             reduceSpeedTo(vector.clone().multiply(0.2));
+        }else if(distance > 1.5){
+            reduceSpeedTo(vector.clone().multiply(0.1));
+        }else if(distance > 1){
+            reduceSpeedTo(vector.clone().multiply(0.05));
+        }else if(distance > 0.5){
+            reduceSpeedTo(vector.clone().multiply(0.025));
         }else {
             getBoosterParticle()[0].setCount(6);
             setSpeed(new Vector(0, 0, 0));

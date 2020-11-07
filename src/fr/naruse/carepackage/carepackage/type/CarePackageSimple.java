@@ -4,9 +4,11 @@ import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackageType;
 import fr.naruse.carepackage.carepackage.ParticleInfo;
 import fr.naruse.carepackage.main.CarePackagePlugin;
+import fr.naruse.carepackage.utils.Utils;
 import net.minecraft.server.v1_12_R1.EnumParticle;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.Inventory;
 
 public class CarePackageSimple extends CarePackage {
@@ -24,7 +26,7 @@ public class CarePackageSimple extends CarePackage {
 
     @Override
     protected void buildEntities() {
-        Location origin = destination.clone().add(0, 8, 0);
+        Location origin = spawn.clone();
         Location location = origin.clone();
         createArmorStand(location, Material.STAINED_CLAY, (byte) 7);
         location.add(-0.28, 0, -0.128);
@@ -110,7 +112,14 @@ public class CarePackageSimple extends CarePackage {
         location.add(0, 3, -0.5);
         createFallingBlock(location, Material.FENCE);
 
-         targetDestination();
+        double distance = Double.MAX_VALUE;
+        for (Entity e : entities) {
+            double d = Utils.distanceXZ(e.getLocation(), spawn);
+            if(d < distance){
+                distance = d;
+                closestEntityForSoundBarrier = e;
+            }
+        }
     }
 
     @Override

@@ -22,6 +22,7 @@ public class CarePackageType {
 
     static {
         carePackageTypes.add(SIMPLE);
+        carePackageTypeMap.put(SIMPLE.getName(), SIMPLE);
     }
 
     private Class clazz;
@@ -79,6 +80,7 @@ public class CarePackageType {
         carePackageTypes.clear();
         carePackageTypeMap.clear();
         carePackageTypes.add(SIMPLE);
+        carePackageTypeMap.put(SIMPLE.getName(), SIMPLE);
     }
 
     public static CarePackageType valueOf(String name){

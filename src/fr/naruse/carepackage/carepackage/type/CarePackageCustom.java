@@ -21,8 +21,8 @@ public class CarePackageCustom extends CarePackage {
             new ParticleInfo(EnumParticle.SMOKE_NORMAL, 1, 20),
     };
 
-    private List<BlockInfo> blockInfos;
-    private int radius;
+    private final List<BlockInfo> blockInfos;
+    private final int radius;
 
     public CarePackageCustom(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, Model model) {
         super(pl, name, type, destination, inventory);
@@ -79,13 +79,5 @@ public class CarePackageCustom extends CarePackage {
     @Override
     protected double getRadius() {
         return radius;
-    }
-
-    public void setBlockInfos(List<BlockInfo> blockInfos){
-        this.blockInfos = blockInfos;
-    }
-
-    public void setRadius(int radius) {
-        this.radius = radius;
     }
 }

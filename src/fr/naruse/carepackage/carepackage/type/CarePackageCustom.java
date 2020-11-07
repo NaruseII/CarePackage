@@ -2,6 +2,7 @@ package fr.naruse.carepackage.carepackage.type;
 
 import fr.naruse.carepackage.carepackage.*;
 import fr.naruse.carepackage.main.CarePackagePlugin;
+import fr.naruse.carepackage.utils.Utils;
 import net.minecraft.server.v1_12_R1.EnumParticle;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class CarePackageCustom extends CarePackage {
 
-    private final ParticleInfo[] BOOSTERS_PARTICLES = new ParticleInfo[]{
+    private ParticleInfo[] boosterParticles = new ParticleInfo[]{
             new ParticleInfo(EnumParticle.FLAME, 8, 100),
             new ParticleInfo(EnumParticle.EXPLOSION_LARGE, 1, 5),
             new ParticleInfo(EnumParticle.SMOKE_LARGE, 1, 10),
@@ -27,14 +28,23 @@ public class CarePackageCustom extends CarePackage {
         super(pl, name, type, destination, inventory);
         this.blockInfos = model.getBlockInfos();
         this.radius = model.getRadius();
+        if(model.getParticleInfos() != null){
+            this.boosterParticles = model.getParticleInfos();
+        }
     }
 
     @Override
     protected void buildEntities() {
+        double distance = Double.MAX_VALUE;
         for (int i = 0; i < blockInfos.size(); i++) {
             BlockInfo blockInfo = blockInfos.get(i);
             if(blockInfo.getMaterial() != Material.BARRIER){
-                createFallingBlock(spawn.clone().add(blockInfo.getX(), blockInfo.getY(), blockInfo.getZ()), blockInfo.getMaterial(), blockInfo.getData());
+                Entity e = createFallingBlock(spawn.clone().add(blockInfo.getX(), blockInfo.getY(), blockInfo.getZ()), blockInfo.getMaterial(), blockInfo.getData());
+                double d = Utils.distanceXZ(e.getLocation(), spawn);
+                if(d < distance){
+                    distance = d;
+                    closestEntityForSoundBarrier = e;
+                }
             }
         }
         for (int i = 0; i < blockInfos.size(); i++) {
@@ -63,7 +73,7 @@ public class CarePackageCustom extends CarePackage {
 
     @Override
     protected ParticleInfo[] getBoosterParticle() {
-        return BOOSTERS_PARTICLES;
+        return boosterParticles;
     }
 
     @Override

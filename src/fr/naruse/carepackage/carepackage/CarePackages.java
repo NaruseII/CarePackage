@@ -5,6 +5,7 @@ import fr.naruse.carepackage.carepackage.type.CarePackageCustom;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.ItemStackSerializer;
 import fr.naruse.carepackage.utils.Utils;
+import net.minecraft.server.v1_12_R1.EnumParticle;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -39,15 +40,9 @@ public class CarePackages {
                 continue;
             }
 
-            int id = getIdFromName(name);
-            if(id == -1){
-                pl.getLogger().warning("[Model] Care Package '"+name+"' not found in config file");
-                return;
-            }
-
             CarePackageType carePackageType = CarePackageType.valueOf(name.toUpperCase());
             if(carePackageType == null){
-                pl.getLogger().warning("[Model] Care Package with name '"+name+"' already exists. From model '"+model.getName()+"'");
+                pl.getLogger().warning("[Model] Care PackageType with name '"+name+"' not found. From model '"+model+"'");
                 continue;
             }
 
@@ -59,13 +54,73 @@ public class CarePackages {
                 }
                 BlockInfo location = Utils.getConfigBlockInfo(model, i+"");
                 if(location == null){
-                    pl.getLogger().warning("[Model] Block with id in config '"+i+"' not found for Care Package '"+name+"' in model '"+model.getName()+"'");
+                    pl.getLogger().warning("[Model] Block with id in config '"+i+"' not found in model '"+model+"'");
                     continue;
                 }
                 blockInfos.add(location);
             }
 
-            carePackageType.registerCustomModel(name, blockInfos, radius);
+            ParticleInfo[] particleInfos = null;
+            try{
+                if(model.contains("particles")){
+                    List<ParticleInfo> list = Lists.newArrayList();
+                    for (String format : model.getStringList("particles")) {
+                        if(format.equals("empty")){
+                            break;
+                        }
+                        EnumParticle particle = EnumParticle.FLAME;
+                        int count = 1;
+                        int percentage = 100;
+                        float xOffset = 0.2f;
+                        float yOffset = 1f;
+                        float zOffset = 0.2f;
+                        int yReduced = 1;
+                        float speed = 0;
+                        boolean boost = false;
+                        for (String s : format.replace("{", "").replace("}", "").split(",")) {
+                            String[] args = s.split(":");
+                            switch (args[0]){
+                                case "type":
+                                    particle = EnumParticle.valueOf(args[1]);
+                                    break;
+                                case "count":
+                                    count = Integer.valueOf(args[1]);
+                                    break;
+                                case "percentage":
+                                    percentage = Integer.valueOf(args[1]);
+                                    break;
+                                case "xOffset":
+                                    xOffset = Float.valueOf(args[1]);
+                                    break;
+                                case "yOffset":
+                                    yOffset = Float.valueOf(args[1]);
+                                    break;
+                                case "zOffset":
+                                    zOffset = Float.valueOf(args[1]);
+                                    break;
+                                case "speed":
+                                    speed = Float.valueOf(args[1]);
+                                    break;
+                                case "yReduced":
+                                    yReduced = Integer.valueOf(args[1]);
+                                    break;
+                                case "boost":
+                                    boost = Boolean.valueOf(args[1]);
+                                    break;
+                            }
+                        }
+                        ParticleInfo particleInfo = new ParticleInfo(particle, count, percentage, xOffset, yOffset, zOffset, speed, yReduced, boost);
+                        list.add(particleInfo);
+                    }
+
+                    particleInfos = list.toArray(new ParticleInfo[0]);
+                }
+            }catch (Exception e){
+                pl.getLogger().warning("[Model] Particles for model '"+name+"' badly configured");
+                continue;
+            }
+
+            carePackageType.registerCustomModel(name, blockInfos, radius, particleInfos);
             modelCount++;
         }
 

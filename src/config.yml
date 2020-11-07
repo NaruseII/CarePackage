@@ -1,1 +1,7 @@
 currentLang: "english"
+
+soundBarrierEffectRadius: 50
+particleViewRadius: 100
+speedReducer: 0.005
+randomXZSpawnRange: 35
+secondBeforeDespawn: 60

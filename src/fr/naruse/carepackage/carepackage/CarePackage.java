@@ -41,6 +41,15 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     protected final List<Entity> entities = Lists.newArrayList();
     protected final List<Entity> boosters = Lists.newArrayList();
 
+    protected Entity closestEntityForSoundBarrier;
+    private Entity closestEntity;
+
+    private final int particleViewRadius;
+    private final int soundBarrierEffectRadius;
+    private final double speedReducer;
+    private final int randomXZSpawnRange;
+    private final int secondBeforeDespawn;
+
     public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory) {
         this.pl = pl;
         this.name = name;
@@ -48,10 +57,16 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         this.destination = destination;
         this.inventory = inventory;
 
+        this.particleViewRadius = pl.getConfig().getInt("particleViewRadius");
+        this.soundBarrierEffectRadius = pl.getConfig().getInt("soundBarrierEffectRadius");
+        this.speedReducer = pl.getConfig().getDouble("speedReducer");
+        this.randomXZSpawnRange = pl.getConfig().getInt("randomXZSpawnRange");
+        this.secondBeforeDespawn = pl.getConfig().getInt("secondBeforeDespawn");
+
         this.spawn = destination.clone();
-        spawn.setY(spawn.getWorld().getMaxHeight()+50);
-        spawn.add(RANDOM.nextBoolean() ? RANDOM.nextInt(35) : -RANDOM.nextInt(35), 0
-                , RANDOM.nextBoolean() ? RANDOM.nextInt(35) : -RANDOM.nextInt(35));
+        spawn.setY(destination.getY()+spawn.getWorld().getMaxHeight());
+        spawn.add(RANDOM.nextBoolean() ? RANDOM.nextInt(randomXZSpawnRange) : -RANDOM.nextInt(randomXZSpawnRange), 0
+                , RANDOM.nextBoolean() ? RANDOM.nextInt(randomXZSpawnRange) : -RANDOM.nextInt(randomXZSpawnRange));
         this.vector = destination.toVector().subtract(spawn.toVector()).divide(new Vector(1000, 1000, 1000));
 
         Bukkit.getPluginManager().registerEvents(this, pl);
@@ -104,41 +119,47 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         if(entities.size() == 0){
             return;
         }
-        Location location = entities.get(0).getLocation();
-        if(secondCount < 5){
-            setSpeed(vector.clone().multiply(4));
-        }else if(secondCount == 5 || secondCount == 15){
-            playSoundBarrierBreakParticles();
-            if(secondCount == 5){
-                reduceSpeedTo(vector.clone().multiply(3));
-            }else{
-                reduceSpeedTo(vector.clone().multiply(2));
-            }
-        }else if(secondCount < 10){
-            setSpeed(vector.clone().multiply(3));
-        }else{
-            if(location.distance(destination) > 25){
-                getBoosterParticle()[0].setCount(12);
-                reduceSpeedTo(vector.clone().multiply(2));
-            }else if(location.distance(destination) > 20){
-                getBoosterParticle()[0].setCount(15);
-                reduceSpeedTo(vector.clone().multiply(1));
-            }else if(location.distance(destination) > 15){
-                getBoosterParticle()[0].setCount(20);
-                reduceSpeedTo(vector.clone().multiply(0.8));
-            }else if(location.distance(destination) > 12){
-                reduceSpeedTo(vector.clone().multiply(0.5));
-            }else if(location.distance(destination) > 10){
-                reduceSpeedTo(vector.clone().multiply(0.3));
-            }else{
-                setSpeed(vector.clone().multiply(0.2));
-            }
+        Location location =
+                closestEntity.getLocation();
+        double distance = Utils.distanceY(location, destination);
 
-            Location closest = getClosest();
-            if(Utils.distanceY(closest, destination) <= 6){
-                getBoosterParticle()[0].setCount(6);
-                setSpeed(new Vector(0, 0, 0));
-                isLanded = true;
+        if(secondCount == 5 || secondCount == 10){
+            playSoundBarrierBreakParticles();
+        }
+
+        if(distance > 50){
+            setSpeed(vector.clone().multiply(6));
+        }else if(distance > 40){
+            reduceSpeedTo(vector.clone().multiply(3));
+        }else if(distance > 30){
+            reduceSpeedTo(vector.clone().multiply(2));
+        }else if(distance > 25){
+            setParticleCount(12);
+            reduceSpeedTo(vector.clone().multiply(2));
+        }else if(distance > 20){
+            setParticleCount(15);
+            reduceSpeedTo(vector.clone().multiply(1));
+        }else if(distance > 15){
+            setParticleCount(20);
+            reduceSpeedTo(vector.clone().multiply(1));
+        }else if(distance > 12){
+            reduceSpeedTo(vector.clone().multiply(0.8));
+        }else if(distance > 5){
+            reduceSpeedTo(vector.clone().multiply(0.3));
+        }else if(distance > 0.5){
+            reduceSpeedTo(vector.clone().multiply(0.2));
+        }else {
+            getBoosterParticle()[0].setCount(6);
+            setSpeed(new Vector(0, 0, 0));
+            isLanded = true;
+        }
+    }
+
+
+    private void setParticleCount(int count){
+        for (ParticleInfo particleInfo : getBoosterParticle()) {
+            if(particleInfo.canBoost()){
+                particleInfo.setCount(count);
             }
         }
     }
@@ -154,6 +175,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         for (Entity entity : entities) {
             if(entity instanceof FallingBlock){
                 currentVector = entity.getVelocity();
+                break;
             }
         }
         if(currentVector == null){
@@ -162,16 +184,14 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         }
         if(currentVector.getY() < vector.getY()){
             for (Entity entity : entities) {
-                entity.setVelocity(currentVector.clone().add(new Vector(0, 0.005, 0)));
+                entity.setVelocity(currentVector.clone().add(new Vector(0, speedReducer, 0)));
             }
         }else{
             isReducingSpeed = false;
             setSpeed(vector);
             return;
         }
-        Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
-           reduceSpeedTo(vector);
-        }, 1);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> reduceSpeedTo(vector), 1);
     }
 
     private void setSpeed(Vector vector){
@@ -194,6 +214,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             return 2;
         }
         buildEntities();
+        this.closestEntity = getClosest();
         return 0;
     }
 
@@ -208,18 +229,17 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     }
 
     protected void playSoundBarrierBreakParticles(){
-        Location currentLocation = getClosest();
-        if(currentLocation == null){
+        if(closestEntityForSoundBarrier == null){
             return;
         }
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < soundBarrierEffectRadius; i++) {
             final int r = i;
             Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
-                for (Block block : Utils.getCircle(currentLocation, r)) {
+                for (Block block : Utils.getCircle(closestEntityForSoundBarrier.getLocation(), r)) {
                     PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.SMOKE_LARGE, true, (float) block.getX(), (float) block.getY()-1,
                             (float) block.getZ(), 1, 0, 1, 0, 1);
-                    for (Entity nearbyEntity : currentLocation.getWorld().getNearbyEntities(currentLocation, 100, 100, 100)) {
+                    for (Entity nearbyEntity : closestEntityForSoundBarrier.getLocation().getWorld().getNearbyEntities(closestEntityForSoundBarrier.getLocation(), particleViewRadius, particleViewRadius, particleViewRadius)) {
                         if(nearbyEntity instanceof Player){
                             ((CraftPlayer) nearbyEntity).getHandle().playerConnection.sendPacket(packet);
                         }
@@ -237,7 +257,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
                     continue;
                 }
                 PacketPlayOutWorldParticles packet = particleInfo.getParticlePacket(location);
-                for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, 60, 60, 60)) {
+                for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, particleViewRadius, particleViewRadius, particleViewRadius)) {
                     if(nearbyEntity instanceof Player){
                         ((CraftPlayer) nearbyEntity).getHandle().playerConnection.sendPacket(packet);
                     }
@@ -266,22 +286,17 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         destroy();
     }
 
-    private Location getClosest(){
+    private Entity getClosest(){
         if(entities.size() == 0){
             return null;
         }
-        Location closest = entities.get(0).getLocation().clone();
-        double d = closest.distanceSquared(destination);
+        Entity e = entities.get(0);
         for (Entity entity : entities) {
-            if(entity.getLocation().distance(destination) < d){
-                closest = entity.getLocation();
+            if(e.getLocation().getY() > entity.getLocation().getY()){
+                e = entity;
             }
         }
-        return closest;
-    }
-
-    protected ArmorStand createArmorStand(Location location, Material m){
-        return this.createArmorStand(location, m, (byte) 0);
+        return e;
     }
 
     protected ArmorStand createArmorStand(Location location, Material m, byte data){
@@ -289,11 +304,13 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         armorStand.setVisible(false);
         armorStand.setHelmet(new ItemStack(m, 1, data));
         armorStand.setGravity(false);
+        armorStand.setInvulnerable(true);
         entities.add(armorStand);
 
         FallingBlock fallingBlock = location.getWorld().spawnFallingBlock(location, Material.BARRIER, (byte) 0);
         fallingBlock.setGravity(false);
         fallingBlock.setPassenger(armorStand);
+        fallingBlock.setInvulnerable(true);
         entities.add(fallingBlock);
 
         return armorStand;

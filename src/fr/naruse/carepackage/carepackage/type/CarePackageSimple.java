@@ -110,7 +110,7 @@ public class CarePackageSimple extends CarePackage {
         location.add(0, 3, -0.5);
         createFallingBlock(location, Material.FENCE);
 
-        targetDestination();
+         targetDestination();
     }
 
     @Override

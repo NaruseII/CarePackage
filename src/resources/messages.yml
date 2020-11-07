@@ -20,6 +20,11 @@ english:
     listModels: "§aModels : §2{list}"
     alreadySpawned: "§cCare Package already spawned."
     blocksOnPath: "§cBlocks prevent Care Package from landing."
+    noSelection: "§cNo selection found."
+    modelNotFound: "§cModel not found."
+    modelDeleted: "§aModel deleted."
+    particleSaved: "§aParticle saved."
+    particleDeleted: "§aParticles deleted."
   inventory:
     set:
       name: "§4§lCare Package's items"
@@ -50,6 +55,11 @@ french:
     listModels: "§aModèles : §2{list}"
     alreadySpawned: "§cCare Package déjà apparu."
     blocksOnPath: "§cDes blocs empêchent le Care Package d'attérir."
+    noSelection: "§cAucune sélection trouvée."
+    modelNotFound: "§cModèle introuvable."
+    modelDeleted: "§aModèle supprimé."
+    particleSaved: "§aParticule enregistrée."
+    particleDeleted: "§aParticules supprimées."
   inventory:
     set:
       name: "§4§lItems du Care Package"

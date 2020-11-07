@@ -56,11 +56,11 @@ public class CarePackageType {
         return null;
     }
 
-    public void registerCustomModel(String name, List<BlockInfo> blockInfos, int radius){
+    public void registerCustomModel(String name, List<BlockInfo> blockInfos, int radius, ParticleInfo[] particleInfos){
         if(modelMap.containsKey(this)){
             return;
         }
-        Model model = new Model(name, blockInfos, radius);
+        Model model = new Model(name, blockInfos, radius, particleInfos);
         modelMap.put(this, model);
     }
 

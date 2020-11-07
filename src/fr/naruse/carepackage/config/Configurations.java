@@ -113,14 +113,6 @@ public class Configurations {
         reload();
     }
 
-    public FileConfiguration getMessageConfiguration() {
-        return messageConfiguration;
-    }
-
-    public List<FileConfiguration> getModels() {
-        return models;
-    }
-
     public FileConfiguration createConfigurationModel(String name) {
         File file = new File(carePackageModelFile, name+".yml");
         FileConfiguration configuration = new YamlConfiguration();
@@ -137,6 +129,33 @@ public class Configurations {
             e.printStackTrace();
         }
         return null;
+    }
+
+
+    public boolean tryDelete(String name){
+        if(modelMap.containsKey(name)){
+            File file = configurationFile.get(modelMap.get(name));
+            file.delete();
+            return true;
+        }
+        return false;
+    }
+
+    public FileConfiguration getModelConfiguration(String arg) {
+        for (String s : modelMap.keySet()) {
+            if(s.equalsIgnoreCase(arg)){
+                return modelMap.get(s);
+            }
+        }
+        return null;
+    }
+
+    public FileConfiguration getMessageConfiguration() {
+        return messageConfiguration;
+    }
+
+    public List<FileConfiguration> getModels() {
+        return models;
     }
 }
 

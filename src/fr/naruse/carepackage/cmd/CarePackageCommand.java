@@ -12,7 +12,6 @@ import fr.naruse.carepackage.utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -199,14 +198,14 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             Selection selection = worldEditPlugin.getSelection(p);
             if(selection == null) {
-                return sendMessage(sender, "§cNo selection found.");
+                return sendMessage(sender, "noSelection.");
             }
             Vector min = selection.getNativeMinimumPoint();
             Vector max = selection.getNativeMaximumPoint();
             Block block = selection.getWorld().getBlockAt(min.getBlockX(), min.getBlockY(), min.getBlockZ());
             Block block2 = selection.getWorld().getBlockAt(max.getBlockX(), max.getBlockY(), max.getBlockZ());
 
-            Location origin = p.getLocation();
+            Location origin = p.getLocation().add(0, -1, 0);
 
             configuration.set("name", args[1]);
             configuration.set("radius", radius);
@@ -226,6 +225,8 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 count++;
             }
             pl.getConfigurations().saveConfigs();
+            CarePackageType.clear();
+            pl.getConfigurations().reload();
 
             return sendMessage(sender, "modelCreated");
         }
@@ -235,15 +236,12 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             if(args.length < 1){
                 return help(sender, 1);
             }
-            int id = getIdFromName(args[1]);
-            if(id == -1){
-                return sendMessage(sender, "carePackageNotFound", new String[]{"name"}, new String[]{args[1]});
+
+            if(CarePackageType.valueOf(args[1].toUpperCase()) == null || !pl.getConfigurations().tryDelete(args[1])){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
 
-            pl.getConfig().set("cp."+id, null);
-            pl.saveConfig();
-
-            return sendMessage(sender, "deleted");
+            return sendMessage(sender, "modelDeleted");
         }
 
         //LIST
@@ -280,7 +278,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             if(CarePackageType.values().size() != 0){
                 stringBuilder.append(CarePackageType.values().get(0).getName());
             }
-            for (int i = 1; i < pl.getConfigurations().getModels().size(); i++) {
+            for (int i = 1; i < CarePackageType.values().size(); i++) {
                 CarePackageType carePackageType = CarePackageType.values().get(i);
                 stringBuilder.append(", "+carePackageType.getName());
             }
@@ -288,6 +286,65 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendMessage(sender, "listModels", new String[]{"list"}, new String[]{stringBuilder.toString()});
             sendMessage(sender, "listNotGood", new String[]{"list"}, new String[]{breakdownCP});
             return sendMessage(sender, "listGood", new String[]{"list"}, new String[]{activeCP});
+        }
+
+        //ADD MODEL PARTICLE
+        if(args[0].equalsIgnoreCase("addModelParticle")){
+            if(args.length < 2){
+                return help(sender, 2);
+            }
+
+            CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
+            if(type == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
+            if(configuration == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            List<String> list;
+            if(configuration.contains("particles")){
+                list = configuration.getStringList("particles");
+                if(list.contains("empty")){
+                    list.clear();
+                }
+            }else{
+                list = Lists.newArrayList();
+            }
+            StringBuilder builder = new StringBuilder(args[2]);
+            for (int i = 3; i < args.length; i++) {
+                builder.append(args[i]);
+            }
+            list.add(builder.toString());
+
+            configuration.set("particles", list);
+            pl.getConfigurations().saveConfigs();
+
+            return sendMessage(sender, "particleSaved");
+        }
+
+        //CLEAR MODEL PARTICLE
+        if(args[0].equalsIgnoreCase("clearModelParticle")){
+            if(args.length < 1){
+                return help(sender, 2);
+            }
+
+            CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
+            if(type == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
+            if(configuration == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            configuration.set("particles", Lists.newArrayList("empty"));
+            pl.getConfigurations().saveConfigs();
+
+            return sendMessage(sender, "particleDeleted");
         }
         return false;
     }
@@ -307,13 +364,16 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
         }else if(page == 2){
             sendNormalMessage(sender, "§6/§7cp setLang <French, English>");
             sendNormalMessage(sender, "§6/§7cp list");
+            sendNormalMessage(sender, "§6/§7cp addModelParticle <Model Name> <Particle>");
+            sendNormalMessage(sender, "§6Ex: §e{type:FLAME, count:2, percentage:100, xOffset:0.2, yOffset:1, zOffset:0.2, speed:0, yReduced:1, boost:true}");
+            sendNormalMessage(sender, "§6/§7cp clearModelParticle <Model Name>");
+           /*
+
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");
-            sendNormalMessage(sender, "§6/§7cp ");
-            sendNormalMessage(sender, "§6/§7cp ");
-            sendNormalMessage(sender, "§6/§7cp ");
+            sendNormalMessage(sender, "§6/§7cp ");*/
             sendNormalMessage(sender, "§bPage: §21/2");
         }
         return true;
@@ -355,7 +415,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
     private CarePackage getCarePackageFromName(String arg) {
         for (int i = 0; i < pl.getCarePackages().getCarePackages().size(); i++) {
             CarePackage carePackage = pl.getCarePackages().getCarePackages().get(i);
-            if(carePackage.getName().equals(arg)){
+            if(carePackage != null && carePackage.getName().equals(arg)){
                 return carePackage;
             }
         }
@@ -366,12 +426,22 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
         List<String> list = Lists.newArrayList();
         if(args.length == 3 && args[0].equalsIgnoreCase("create")){
-            for (CarePackageType type : CarePackageType.values()) {
-                if(type.getName().contains(args[2].toUpperCase())){
-                    list.add(type.getName());
-                }
-            }
+            fillList(list, args[2]);
+        }
+        if(args.length == 2 && (args[0].equalsIgnoreCase("addModelParticle") || args[0].equalsIgnoreCase("clearModelParticle"))){
+            fillList(list, args[1]);
+        }
+        if(args.length == 2 && args[0].equalsIgnoreCase("deleteModel")){
+            fillList(list, args[2]);
         }
         return list;
+    }
+
+    private void fillList(List<String> list, String arg){
+        for (CarePackageType type : CarePackageType.values()) {
+            if(type.getName().contains(arg.toUpperCase())){
+                list.add(type.getName());
+            }
+        }
     }
 }

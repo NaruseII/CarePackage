@@ -108,7 +108,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         if(secondCount < 5){
             setSpeed(vector.clone().multiply(4));
         }else if(secondCount == 5 || secondCount == 15){
-            playSoundBarrierBreakParticles(location);
+            playSoundBarrierBreakParticles();
             if(secondCount == 5){
                 reduceSpeedTo(vector.clone().multiply(3));
             }else{
@@ -134,14 +134,8 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
                 setSpeed(vector.clone().multiply(0.2));
             }
 
-            Location closest = location.clone();
-            double d = closest.distanceSquared(destination);
-            for (Entity entity : entities) {
-                if(entity.getLocation().distance(destination) < d){
-                    closest = entity.getLocation();
-                }
-            }
-            if(destination.distance(closest) <= 6){
+            Location closest = getClosest();
+            if(Utils.distanceY(closest, destination) <= 6){
                 getBoosterParticle()[0].setCount(6);
                 setSpeed(new Vector(0, 0, 0));
                 isLanded = true;
@@ -189,17 +183,18 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         }
     }
 
-    public void spawn() {
+    public int spawn() {
         if(isSpawned){
-            return;
+            return 1;
         }
         this.isSpawned = true;
         if(!canSpawn()){
             isSpawned = false;
             pl.getLogger().log(Level.INFO, "Can't spawn '"+type.getName()+"'");
-            return;
+            return 2;
         }
         buildEntities();
+        return 0;
     }
 
     public void destroy(){
@@ -209,10 +204,15 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             e.remove();
         }
         entities.clear();
-        entities.clear();
+        boosters.clear();
     }
 
-    protected void playSoundBarrierBreakParticles(Location currentLocation){
+    protected void playSoundBarrierBreakParticles(){
+        Location currentLocation = getClosest();
+        if(currentLocation == null){
+            return;
+        }
+
         for (int i = 0; i < 50; i++) {
             final int r = i;
             Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
@@ -264,6 +264,20 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     public void disable() {
         cancel();
         destroy();
+    }
+
+    private Location getClosest(){
+        if(entities.size() == 0){
+            return null;
+        }
+        Location closest = entities.get(0).getLocation().clone();
+        double d = closest.distanceSquared(destination);
+        for (Entity entity : entities) {
+            if(entity.getLocation().distance(destination) < d){
+                closest = entity.getLocation();
+            }
+        }
+        return closest;
     }
 
     protected ArmorStand createArmorStand(Location location, Material m){

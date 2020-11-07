@@ -68,6 +68,10 @@ public class Utils {
         return Math.sqrt(NumberConversions.square(location.getX() - destination.getX()) + NumberConversions.square(location.getY() - destination.getY()) + NumberConversions.square(location.getZ() - destination.getZ()));
     }
 
+    public static double distanceY(Location location, Location destination) {
+        return NumberConversions.square(location.getY() - destination.getY());
+    }
+
     public static List<Block> blocksFromTwoPoints(Location loc1, Location loc2) {
         List<Block> blocks = Lists.newArrayList();
         int topBlockX = (loc1.getBlockX() < loc2.getBlockX() ? loc2.getBlockX() : loc1.getBlockX());

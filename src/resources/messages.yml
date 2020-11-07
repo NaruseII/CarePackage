@@ -15,6 +15,11 @@ english:
     modelAlreadyUsed: "§cModel name already used."
     modelCreated: "§aModel created."
     worldEditNotFound: "§cWorldEdit not found."
+    listNotGood: "§aMisconfigured Care Packages : §c{list}"
+    listGood: "§aFunctional Care Packages: §2{list}"
+    listModels: "§aModels : §2{list}"
+    alreadySpawned: "§cCare Package already spawned."
+    blocksOnPath: "§cBlocks prevent Care Package from landing."
   inventory:
     set:
       name: "§4§lCare Package's items"
@@ -40,6 +45,11 @@ french:
     modelAlreadyUsed: "§cNom de model déjà utilisé."
     modelCreated: "§aModel créé."
     worldEditNotFound: "§cWorldEdit introuvable."
+    listNotGood: "§aCare Packages mal configurés : §c{list}"
+    listGood: "§aCare Packages en fonction : §2{list}"
+    listModels: "§aModèles : §2{list}"
+    alreadySpawned: "§cCare Package déjà apparu."
+    blocksOnPath: "§cDes blocs empêchent le Care Package d'attérir."
   inventory:
     set:
       name: "§4§lItems du Care Package"

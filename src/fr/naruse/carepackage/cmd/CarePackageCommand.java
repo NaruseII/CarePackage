@@ -104,7 +104,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             }
 
             pl.getConfig().set("cp."+id+".location.destination.x", p.getLocation().getX());
-            pl.getConfig().set("cp."+id+".location.destination.y", p.getLocation().getY());
+            pl.getConfig().set("cp."+id+".location.destination.y", p.getLocation().getY()+1);
             pl.getConfig().set("cp."+id+".location.destination.z", p.getLocation().getZ());
             pl.getConfig().set("cp."+id+".location.destination.world", p.getWorld().getName());
             pl.saveConfig();
@@ -152,7 +152,11 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             if(carePackage == null){
                 return sendMessage(sender, "carePackageNotFound", new String[]{"name"}, new String[]{args[1]});
             }
-            carePackage.spawn();
+            switch (carePackage.spawn()){
+                case 0: return sendMessage(sender, "spawned");
+                case 1: return sendMessage(sender, "alreadySpawned");
+                case 2: return sendMessage(sender, "blocksOnPath");
+            }
             return sendMessage(sender, "spawned");
         }
 
@@ -241,6 +245,50 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             return sendMessage(sender, "deleted");
         }
+
+        //LIST
+        if(args[0].equalsIgnoreCase("list")){
+            String activeCP = ",,";
+            String breakdownCP = ",,";
+
+            List<String> list = Lists.newArrayList();
+            for (int i = 0; i < pl.getCarePackages().getCarePackages().size(); i++) {
+                CarePackage CarePackage = pl.getCarePackages().getCarePackages().get(i);
+                activeCP += ", "+CarePackage.getName();
+                list.add(CarePackage.getName());
+            }
+
+            activeCP = activeCP.replace(",,, ", "");
+            for(int i = 0; i != 999; i++){
+                if(pl.getConfig().contains("cp."+i+".name")){
+                    String name = pl.getConfig().getString("cp."+i+".name");
+                    if(!list.contains(name)){
+                        breakdownCP += ", "+name;
+                    }
+                }
+            }
+
+            breakdownCP = breakdownCP.replace(",,, ", "");
+            if(breakdownCP.contains(",,")){
+                breakdownCP = "";
+            }
+            if(activeCP.contains(",,")){
+                activeCP = "";
+            }
+
+            StringBuilder stringBuilder = new StringBuilder();
+            if(CarePackageType.values().size() != 0){
+                stringBuilder.append(CarePackageType.values().get(0).getName());
+            }
+            for (int i = 1; i < pl.getConfigurations().getModels().size(); i++) {
+                CarePackageType carePackageType = CarePackageType.values().get(i);
+                stringBuilder.append(", "+carePackageType.getName());
+            }
+
+            sendMessage(sender, "listModels", new String[]{"list"}, new String[]{stringBuilder.toString()});
+            sendMessage(sender, "listNotGood", new String[]{"list"}, new String[]{breakdownCP});
+            return sendMessage(sender, "listGood", new String[]{"list"}, new String[]{activeCP});
+        }
         return false;
     }
 
@@ -258,7 +306,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendNormalMessage(sender, "§bPage: §21/2");
         }else if(page == 2){
             sendNormalMessage(sender, "§6/§7cp setLang <French, English>");
-            sendNormalMessage(sender, "§6/§7cp ");
+            sendNormalMessage(sender, "§6/§7cp list");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");

@@ -77,22 +77,24 @@ public class Model {
     public String toJson(Gson gson) {
         Map<String, Object> map = Maps.newHashMap();
 
-        map.put("radius", radius);
-        map.put("speedReducer", speedReducer);
-        map.put("particleViewRadius", particleViewRadius);
-        map.put("randomXZSpawnRange", randomXZSpawnRange);
-        map.put("secondBeforeRemove", secondBeforeRemove);
-        map.put("soundBarrierEffectRadius", soundBarrierEffectRadius);
-        map.put("timeBeforeBarrierEffect", timeBeforeBarrierEffect);
+        map.put("radius", radius+"");
+        map.put("speedReducer", speedReducer+"");
+        map.put("particleViewRadius", particleViewRadius+"");
+        map.put("randomXZSpawnRange", randomXZSpawnRange+"");
+        map.put("secondBeforeRemove", secondBeforeRemove+"");
+        map.put("soundBarrierEffectRadius", soundBarrierEffectRadius+"");
+        map.put("timeBeforeBarrierEffect", timeBeforeBarrierEffect+"");
 
         StringBuilder builder = new StringBuilder();
-        if(particleInfos.length != 0){
-            builder.append(particleInfos[0].toJson(gson));
+        if(particleInfos != null){
+            if(particleInfos.length != 0){
+                builder.append(particleInfos[0].toJson(gson));
+            }
+            for (int i = 1; i < particleInfos.length; i++) {
+                builder.append(particleInfos[i].toJson(gson));
+            }
+            map.put("particles", builder.toString());
         }
-        for (int i = 1; i < particleInfos.length; i++) {
-            builder.append(particleInfos[i].toJson(gson));
-        }
-        map.put("particles", builder.toString());
 
         for (int i = 0; i < blockInfos.size(); i++) {
             map.put(i+"", blockInfos.get(i).toJson(gson));

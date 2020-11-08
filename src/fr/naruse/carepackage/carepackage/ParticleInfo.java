@@ -74,14 +74,14 @@ public class ParticleInfo {
     public String toJson(Gson gson) {
         Map<String, Object> map = Maps.newHashMap();
 
-        map.put("count", count);
-        map.put("percentage", percentage);
-        map.put("xOffset", xOffset);
-        map.put("yOffset", yOffset);
-        map.put("zOffset", zOffset);
-        map.put("speed", speed);
-        map.put("yReduced", yReduced);
-        map.put("canBoost", canBoost);
+        map.put("count", count+"");
+        map.put("percentage", percentage+"");
+        map.put("xOffset", xOffset+"");
+        map.put("yOffset", yOffset+"");
+        map.put("zOffset", zOffset+"");
+        map.put("speed", speed+"");
+        map.put("yReduced", yReduced+"");
+        map.put("canBoost", canBoost+"");
 
         return gson.toJson(map);
     }
@@ -91,15 +91,15 @@ public class ParticleInfo {
         public static ParticleInfo fromJson(Map<String, Object> map) {
 
             EnumParticle particle = EnumParticle.valueOf((String) map.get("type"));
-            int count = (int) map.get("count");
-            int percentage = (int) map.get("percentage");
+            int count = Integer.valueOf((String) map.get("count"));
+            int percentage = Integer.valueOf((String) map.get("percentage"));
 
-            float xOffset = (float) (int) map.get("xOffset");
-            float yOffset = (float) (int) map.get("yOffset");
-            float zOffset = (float) (int) map.get("zOffset");
-            float speed = (float) (int) map.get("speed");
-            int yReduced = (int) map.get("yReduced");
-            boolean canBoost = (boolean) map.get("canBoost");
+            float xOffset = Float.valueOf((String) map.get("xOffset"));
+            float yOffset = Float.valueOf((String) map.get("yOffset"));
+            float zOffset = Float.valueOf((String) map.get("zOffset"));
+            float speed = Float.valueOf((String) map.get("speed"));
+            int yReduced = Integer.valueOf((String) map.get("yReduced"));
+            boolean canBoost = Boolean.valueOf((String) map.get("canBoost"));
 
             return new ParticleInfo(particle, count, percentage, xOffset, yOffset, zOffset, speed, yReduced
             , canBoost);

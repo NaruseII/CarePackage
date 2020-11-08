@@ -195,8 +195,6 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "modelAlreadyUsed");
             }
 
-            FileConfiguration configuration = pl.getConfigurations().createConfigurationModel(args[1]);
-
             WorldEditPlugin worldEditPlugin = (WorldEditPlugin) Bukkit.getPluginManager().getPlugin("WorldEdit");
             if(worldEditPlugin == null){
                 return sendMessage(sender, "worldEditNotFound");
@@ -209,6 +207,8 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             Location origin = p.getLocation().add(0, -1, 0);
 
+
+            FileConfiguration configuration = pl.getConfigurations().createConfigurationModel(args[1]);
             configuration.set("name", args[1]);
             configuration.set("radius", radius);
             configuration.set("particleViewRadius", 100);
@@ -232,9 +232,14 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 configuration.set(count+".data", b.getData());
                 count++;
             }
+
             pl.getConfigurations().saveConfigs();
             CarePackageType.clear();
             pl.getConfigurations().reload();
+            if(pl.getSqlManager() != null){
+                pl.getSqlManager().loadModels(true);
+                pl.getConfigurations().tryDelete(args[1]);
+            }
 
             return sendMessage(sender, "modelCreated");
         }
@@ -245,9 +250,18 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return help(sender, 1);
             }
 
-            if(CarePackageType.valueOf(args[1].toUpperCase()) == null || !pl.getConfigurations().tryDelete(args[1])){
+            args[1] = args[1].toUpperCase();
+
+            CarePackageType carePackageType = CarePackageType.valueOf(args[1]);
+            if(carePackageType == null){
                 return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
+
+            pl.getConfigurations().tryDelete(args[1]);
+            if(pl.getSqlManager() != null){
+                pl.getSqlManager().deleteModel(args[1]);
+            }
+            carePackageType.remove();
 
             return sendMessage(sender, "modelDeleted");
         }
@@ -491,6 +505,13 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
         List<String> list = Lists.newArrayList();
+        if(args.length == 2 && args[0].equalsIgnoreCase("spawn")){
+            for (CarePackage carePackage : pl.getCarePackages().getCarePackages()) {
+                if(carePackage.getName().contains(args[1])){
+                    list.add(carePackage.getName());
+                }
+            }
+        }
         if(args.length == 3 && args[0].equalsIgnoreCase("create")){
             fillList(list, args[2]);
         }

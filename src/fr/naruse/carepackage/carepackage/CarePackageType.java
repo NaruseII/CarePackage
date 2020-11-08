@@ -44,6 +44,11 @@ public class CarePackageType {
         return model;
     }
 
+    public void remove() {
+        carePackageTypes.remove(this);
+        carePackageTypeMap.remove(this);
+    }
+
     public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory, int money){
         try{
             if(isCustom){
@@ -72,6 +77,8 @@ public class CarePackageType {
         Model model = new Model(name, blockInfos, radius, particleInfos, particleViewRadius, soundBarrierEffectRadius, speedReducer, randomXZSpawnRange, secondBeforeRemove, timeBeforeBarrierEffect);
         this.model = model;
     }
+
+
 
     public static CarePackageType registerCarePackage(String name){
         name = name.toUpperCase();

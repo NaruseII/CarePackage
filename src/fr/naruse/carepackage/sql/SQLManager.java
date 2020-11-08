@@ -9,6 +9,7 @@ import fr.naruse.carepackage.carepackage.ParticleInfo;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.dbapi.api.DatabaseAPI;
 import fr.naruse.dbapi.database.Database;
+import fr.naruse.dbapi.main.DBAPICore;
 import fr.naruse.dbapi.sql.SQLHelper;
 import fr.naruse.dbapi.sql.SQLRequest;
 import fr.naruse.dbapi.sql.SQLResponse;
@@ -39,7 +40,7 @@ public class SQLManager {
             public String getQuery() {
                 return "CREATE TABLE `" + TABLE_NAME + "` ("
                         + "`name` varchar(64) COLLATE utf8_unicode_ci NOT NULL,"
-                        + "`properties` varchar(8000) NOT NULL)";
+                        + "`properties` LONGBLOB NOT NULL)";
             }
         });
 
@@ -78,17 +79,17 @@ public class SQLManager {
         String properties = new String(Base64.getDecoder().decode(b64));
         Map<String, Object> map = GSON.fromJson(properties, MAP_TYPE);
 
-        int radius = (int) map.get("radius");
-        int particleViewRadius = (int) map.get("particleViewRadius");
-        int soundBarrierEffectRadius = (int) map.get("soundBarrierEffectRadius");
-        double speedReducer = (double) map.get("speedReducer");
-        int randomXZSpawnRange = (int) map.get("randomXZSpawnRange");
-        int secondBeforeRemove = (int) map.get("secondBeforeRemove");
-        int timeBeforeBarrierEffect = (int) map.get("timeBeforeBarrierEffect");
+        int radius = Integer.valueOf((String) map.get("radius"));
+        int particleViewRadius = Integer.valueOf((String) map.get("particleViewRadius"));
+        int soundBarrierEffectRadius = Integer.valueOf((String) map.get("soundBarrierEffectRadius"));
+        double speedReducer = Double.valueOf((String) map.get("speedReducer"));
+        int randomXZSpawnRange = Integer.valueOf((String) map.get("randomXZSpawnRange"));
+        int secondBeforeRemove = Integer.valueOf((String) map.get("secondBeforeRemove"));
+        int timeBeforeBarrierEffect = Integer.valueOf((String) map.get("timeBeforeBarrierEffect"));
 
         CarePackageType carePackageType = CarePackageType.valueOf(name.toUpperCase());
         if(carePackageType != null){
-            pl.getLogger().warning("[SQL Model] Care PackageType with name '"+name+"' not found.");
+            pl.getLogger().warning("[SQL Model] Care PackageType with name '"+name+"' already exists.");
             return;
         }
         carePackageType = CarePackageType.registerCarePackage(name);
@@ -140,9 +141,29 @@ public class SQLManager {
         String[] args = new String[]{"name", "properties"};
 
         for (CarePackageType type : CarePackageType.values()) {
+            if(type.getModel() == null){
+                continue;
+            }
             String b64 = Base64.getEncoder().encodeToString(type.getModel().toJson(GSON).getBytes());
             SQLRequest sqlRequest1 = new SQLRequest(SQLHelper.getInsertRequest(TABLE_NAME, args), type.getName(), b64);
             database.prepareStatement(sqlRequest1);
         }
+    }
+
+    public void deleteModel(String name) {
+        SQLRequest sqlRequest = new SQLRequest(SQLHelper.getSelectRequest(TABLE_NAME, "properties", "name"), name);
+        database.hasAccount(sqlRequest, new SQLResponse() {
+            @Override
+            public void runSynchronously(DBAPICore core, Object o) {
+                if(o == null){
+                    return;
+                }
+                boolean exists = (boolean) o;
+                if(exists){
+                    SQLRequest sqlRequest1 = new SQLRequest(SQLHelper.getDeleteRequest(TABLE_NAME, "name"), name);
+                    database.prepareStatement(sqlRequest1);
+                }
+            }
+        });
     }
 }

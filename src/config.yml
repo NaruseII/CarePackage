@@ -2,3 +2,4 @@ currentLang: "english"
 
 sql:
   tableName: "care_package"
+  enabled: true

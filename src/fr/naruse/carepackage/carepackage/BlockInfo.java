@@ -46,10 +46,10 @@ public class BlockInfo {
         Map<String, Object> map = Maps.newHashMap();
 
         map.put("type", material.name());
-        map.put("data", data);
-        map.put("x", x);
-        map.put("y", y);
-        map.put("z", z);
+        map.put("data", data+"");
+        map.put("x", x+"");
+        map.put("y", y+"");
+        map.put("z", z+"");
 
         return gson.toJson(map);
     }
@@ -59,10 +59,10 @@ public class BlockInfo {
         public static BlockInfo fromJson(Map<String, Object> map) {
 
             Material material = Material.valueOf((String) map.get("type"));
-            byte data = (byte) (int) map.get("data");
-            int x = (int) map.get("x");
-            int y = (int) map.get("y");
-            int z = (int) map.get("z");
+            byte data = (byte) Integer.parseInt((String) map.get("data"));
+            int x = Integer.valueOf((String) map.get("x"));
+            int y = Integer.valueOf((String) map.get("y"));
+            int z = Integer.valueOf((String) map.get("z"));
 
             return new BlockInfo(material, data, x, y, z);
         }

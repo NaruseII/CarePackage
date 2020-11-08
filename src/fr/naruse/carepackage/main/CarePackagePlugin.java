@@ -28,7 +28,7 @@ public class CarePackagePlugin extends JavaPlugin {
         this.configurations = new Configurations(this);
         this.messageManager = new MessageManager.StringManager(this);
         this.carePackages = new CarePackages(this);
-        if(getServer().getPluginManager().getPlugin("DBAPI") != null){
+        if(getServer().getPluginManager().getPlugin("DBAPI") != null && getConfig().getBoolean("sql.enabled")){
             this.sqlManager = new SQLManager(this);
         }
 

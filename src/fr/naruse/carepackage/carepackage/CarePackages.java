@@ -32,7 +32,6 @@ public class CarePackages {
         carePackages.clear();
         badlyConfiguredModels.clear();
 
-        int modelCount = 0;
         for (FileConfiguration model : pl.getConfigurations().getModels()) {
             String name = model.getString("name");
             int radius = model.getInt("radius");
@@ -131,7 +130,6 @@ public class CarePackages {
 
             carePackageType.registerCustomModel(name, blockInfos, radius, particleInfos, particleViewRadius, soundBarrierEffectRadius, speedReducer,
                     randomXZSpawnRange, secondBeforeRemove, timeBeforeBarrierEffect);
-            modelCount++;
         }
 
         for (int i = 0; i < 99999; i++) {
@@ -171,8 +169,8 @@ public class CarePackages {
                 carePackages.add(carePackage);
             }
         }
-        pl.getLogger().log(Level.INFO, ""+modelCount+" Models found");
-        pl.getLogger().log(Level.INFO, ""+carePackages.size()+" Care Packages found");
+        pl.getLogger().log(Level.INFO, (CarePackageType.values().size()-1)+" Models found");
+        pl.getLogger().log(Level.INFO, carePackages.size()+" Care Packages found");
     }
 
     private int getIdFromName(String arg) {

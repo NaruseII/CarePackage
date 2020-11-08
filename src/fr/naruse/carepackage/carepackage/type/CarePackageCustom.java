@@ -10,8 +10,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.inventory.Inventory;
 
-import java.util.List;
-
 public class CarePackageCustom extends CarePackage {
 
     private ParticleInfo[] boosterParticles = new ParticleInfo[]{
@@ -21,13 +19,12 @@ public class CarePackageCustom extends CarePackage {
             new ParticleInfo(EnumParticle.SMOKE_NORMAL, 1, 20),
     };
 
-    private final List<BlockInfo> blockInfos;
-    private final int radius;
+    private final Model model;
 
-    public CarePackageCustom(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, Model model) {
-        super(pl, name, type, destination, inventory);
-        this.blockInfos = model.getBlockInfos();
-        this.radius = model.getRadius();
+    public CarePackageCustom(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, Model model, int money) {
+        super(pl, name, type, destination, inventory, money);
+        this.model = model;
+        setSpawnLocation();
         if(model.getParticleInfos() != null){
             this.boosterParticles = model.getParticleInfos();
         }
@@ -36,8 +33,8 @@ public class CarePackageCustom extends CarePackage {
     @Override
     protected void buildEntities() {
         double distance = Double.MAX_VALUE;
-        for (int i = 0; i < blockInfos.size(); i++) {
-            BlockInfo blockInfo = blockInfos.get(i);
+        for (int i = 0; i < model.getBlockInfos().size(); i++) {
+            BlockInfo blockInfo = model.getBlockInfos().get(i);
             if(blockInfo.getMaterial() != Material.BARRIER){
                 Entity e = createFallingBlock(spawn.clone().add(blockInfo.getX(), blockInfo.getY(), blockInfo.getZ()), blockInfo.getMaterial(), blockInfo.getData());
                 double d = Utils.distanceXZ(e.getLocation(), spawn);
@@ -47,8 +44,8 @@ public class CarePackageCustom extends CarePackage {
                 }
             }
         }
-        for (int i = 0; i < blockInfos.size(); i++) {
-            BlockInfo blockInfo = blockInfos.get(i);
+        for (int i = 0; i < model.getBlockInfos().size(); i++) {
+            BlockInfo blockInfo = model.getBlockInfos().get(i);
             if(blockInfo.getMaterial() == Material.BARRIER){
                 Location loc = spawn.clone().add(blockInfo.getX(), blockInfo.getY(), blockInfo.getZ());
                 loc.add(0, 1, 0);
@@ -78,6 +75,36 @@ public class CarePackageCustom extends CarePackage {
 
     @Override
     protected double getRadius() {
-        return radius;
+        return model.getRadius();
+    }
+
+    @Override
+    protected int getParticleViewRadius() {
+        return model.getParticleViewRadius();
+    }
+
+    @Override
+    protected int getSoundBarrierEffectRadius() {
+        return model.getSoundBarrierEffectRadius();
+    }
+
+    @Override
+    protected double getSpeedReducer() {
+        return model.getSpeedReducer();
+    }
+
+    @Override
+    protected int getRandomXZSpawnRange() {
+        return model.getRandomXZSpawnRange();
+    }
+
+    @Override
+    protected int getSecondBeforeRemove() {
+        return model.getSecondBeforeRemove();
+    }
+
+    @Override
+    protected int getTimeBeforeBarrierEffect() {
+        return model.getTimeBeforeBarrierEffect();
     }
 }

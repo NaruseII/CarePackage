@@ -1,7 +1,6 @@
 package fr.naruse.carepackage.carepackage;
 
 import com.google.common.collect.Lists;
-import fr.naruse.carepackage.carepackage.type.CarePackageCustom;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.ItemStackSerializer;
 import fr.naruse.carepackage.utils.Utils;
@@ -35,6 +34,12 @@ public class CarePackages {
         for (FileConfiguration model : pl.getConfigurations().getModels()) {
             String name = model.getString("name");
             int radius = model.getInt("radius");
+            int particleViewRadius = model.getInt("particleViewRadius", 100);
+            int soundBarrierEffectRadius = model.getInt("soundBarrierEffectRadius", 50);
+            double speedReducer = model.getDouble("speedReducer", 0.005);
+            int randomXZSpawnRange = model.getInt("randomXZSpawnRange", 35);
+            int secondBeforeRemove = model.getInt("secondBeforeRemove", 60);
+            int timeBeforeBarrierEffect = model.getInt("timeBeforeBarrierEffect", 8);
             if(name == null){
                 pl.getLogger().warning("[Model] File '"+model.getName()+"' badly formatted");
                 continue;
@@ -120,13 +125,15 @@ public class CarePackages {
                 continue;
             }
 
-            carePackageType.registerCustomModel(name, blockInfos, radius, particleInfos);
+            carePackageType.registerCustomModel(name, blockInfos, radius, particleInfos, particleViewRadius, soundBarrierEffectRadius, speedReducer,
+                    randomXZSpawnRange, secondBeforeRemove, timeBeforeBarrierEffect);
             modelCount++;
         }
 
         for (int i = 0; i < 99999; i++) {
             if(pl.getConfig().contains("cp."+i+".name")) {
                 String name = pl.getConfig().getString("cp." + i + ".name");
+                int money = pl.getConfig().getInt("cp." + i + ".money");
 
                 CarePackageType carePackageType = CarePackageType.valueOf(pl.getConfig().getString("cp."+i+".type"));
                 if(carePackageType == null){
@@ -148,7 +155,7 @@ public class CarePackages {
                     }
                 }
 
-                CarePackage carePackage = carePackageType.build(pl, name, destination, inventory);
+                CarePackage carePackage = carePackageType.build(pl, name, destination, inventory, money);
                 if(carePackages == null){
                     pl.getLogger().warning("Can't find model for '"+name+"'");
                     continue;

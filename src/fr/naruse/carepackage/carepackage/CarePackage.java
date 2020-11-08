@@ -3,6 +3,7 @@ package fr.naruse.carepackage.carepackage;
 import com.google.common.collect.Lists;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.Utils;
+import fr.naruse.carepackage.utils.VaultUtils;
 import net.minecraft.server.v1_12_R1.EnumParticle;
 import net.minecraft.server.v1_12_R1.PacketPlayOutWorldParticles;
 import org.bukkit.Bukkit;
@@ -33,9 +34,10 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     protected final Location destination;
     protected final String name;
     protected final Inventory inventory;
+    protected final int money;
 
     protected Location spawn;
-    private Vector vector;
+    protected Vector vector;
     protected boolean isSpawned = false;
     protected boolean isLanded = false;
     protected final List<Entity> entities = Lists.newArrayList();
@@ -43,33 +45,15 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     protected Entity closestEntityForSoundBarrier;
     private Entity closestEntity;
+    private Player inventoryOpener;
 
-    private final int particleViewRadius;
-    private final int soundBarrierEffectRadius;
-    private final double speedReducer;
-    private final int randomXZSpawnRange;
-    private final int secondBeforeRemove;
-    private final int timeBeforeBarrierEffect;
-
-    public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory) {
+    public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, int money) {
         this.pl = pl;
         this.name = name;
         this.type = type;
         this.destination = destination;
         this.inventory = inventory;
-
-        this.particleViewRadius = pl.getConfig().getInt("particleViewRadius");
-        this.soundBarrierEffectRadius = pl.getConfig().getInt("soundBarrierEffectRadius");
-        this.speedReducer = pl.getConfig().getDouble("speedReducer");
-        this.randomXZSpawnRange = pl.getConfig().getInt("randomXZSpawnRange");
-        this.secondBeforeRemove = pl.getConfig().getInt("secondBeforeRemove");
-        this.timeBeforeBarrierEffect = pl.getConfig().getInt("timeBeforeBarrierEffect");
-
-        this.spawn = destination.clone();
-        spawn.setY(destination.getY()+spawn.getWorld().getMaxHeight());
-        spawn.add(RANDOM.nextBoolean() ? RANDOM.nextInt(randomXZSpawnRange) : -RANDOM.nextInt(randomXZSpawnRange), 0
-                , RANDOM.nextBoolean() ? RANDOM.nextInt(randomXZSpawnRange) : -RANDOM.nextInt(randomXZSpawnRange));
-        this.vector = destination.toVector().subtract(spawn.toVector()).divide(new Vector(1000, 1000, 1000));
+        this.money = money;
 
         Bukkit.getPluginManager().registerEvents(this, pl);
         this.runTaskTimer(pl, 1, 1);
@@ -90,7 +74,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             if(!isLanded){
                 this.targetDestination();
             }else{
-                if(secondCountLanded >= secondBeforeRemove){
+                if(secondCountLanded >= getSecondBeforeRemove()){
                     destroy();
                     return;
                 }else{
@@ -117,6 +101,18 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     protected abstract double getRadius();
 
+    protected abstract int getParticleViewRadius();
+
+    protected abstract int getSoundBarrierEffectRadius();
+
+    protected abstract double getSpeedReducer();
+
+    protected abstract int getRandomXZSpawnRange();
+
+    protected abstract int getSecondBeforeRemove();
+
+    protected abstract int getTimeBeforeBarrierEffect();
+
     protected void targetDestination() {
         if(entities.size() == 0){
             return;
@@ -124,7 +120,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         Location location = closestEntity.getLocation();
         double distance = Utils.distanceY(location, destination);
 
-        if(secondCount == timeBeforeBarrierEffect){
+        if(secondCount == getTimeBeforeBarrierEffect()){
             playSoundBarrierBreakParticles();
         }
 
@@ -156,7 +152,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         }else if(distance > 0.5){
             reduceSpeedTo(vector.clone().multiply(0.025));
         }else {
-            getBoosterParticle()[0].setCount(6);
+            setParticleCount(6);
             setSpeed(new Vector(0, 0, 0));
             isLanded = true;
         }
@@ -191,7 +187,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         }
         if(currentVector.getY() < vector.getY()){
             for (Entity entity : entities) {
-                entity.setVelocity(currentVector.clone().add(new Vector(0, speedReducer, 0)));
+                entity.setVelocity(currentVector.clone().add(new Vector(0, getSpeedReducer(), 0)));
             }
         }else{
             isReducingSpeed = false;
@@ -228,6 +224,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     public void destroy(){
         this.isSpawned = false;
         this.isLanded = false;
+        this.inventoryOpener = null;
         for (Entity e : entities) {
             e.remove();
         }
@@ -240,13 +237,13 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             return;
         }
 
-        for (int i = 0; i < soundBarrierEffectRadius; i++) {
+        for (int i = 0; i < getSoundBarrierEffectRadius(); i++) {
             final int r = i;
             Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
                 for (Block block : Utils.getCircle(closestEntityForSoundBarrier.getLocation(), r)) {
                     PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.SMOKE_LARGE, true, (float) block.getX(), (float) block.getY()-1,
                             (float) block.getZ(), 1, 0, 1, 0, 1);
-                    for (Entity nearbyEntity : closestEntityForSoundBarrier.getLocation().getWorld().getNearbyEntities(closestEntityForSoundBarrier.getLocation(), particleViewRadius, particleViewRadius, particleViewRadius)) {
+                    for (Entity nearbyEntity : closestEntityForSoundBarrier.getLocation().getWorld().getNearbyEntities(closestEntityForSoundBarrier.getLocation(), getParticleViewRadius(), getParticleViewRadius(), getParticleViewRadius())) {
                         if(nearbyEntity instanceof Player){
                             ((CraftPlayer) nearbyEntity).getHandle().playerConnection.sendPacket(packet);
                         }
@@ -264,7 +261,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
                     continue;
                 }
                 PacketPlayOutWorldParticles packet = particleInfo.getParticlePacket(location);
-                for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, particleViewRadius, particleViewRadius, particleViewRadius)) {
+                for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, getParticleViewRadius(), getParticleViewRadius(), getParticleViewRadius())) {
                     if(nearbyEntity instanceof Player){
                         ((CraftPlayer) nearbyEntity).getHandle().playerConnection.sendPacket(packet);
                     }
@@ -291,6 +288,14 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     public void disable() {
         cancel();
         destroy();
+    }
+
+    protected void setSpawnLocation(){
+        this.spawn = destination.clone();
+        spawn.setY(destination.getY()+spawn.getWorld().getMaxHeight());
+        spawn.add(RANDOM.nextBoolean() ? RANDOM.nextInt(getRandomXZSpawnRange()) : -RANDOM.nextInt(getRandomXZSpawnRange()), 0
+                , RANDOM.nextBoolean() ? RANDOM.nextInt(getRandomXZSpawnRange()) : -RANDOM.nextInt(getRandomXZSpawnRange()));
+        this.vector = destination.toVector().subtract(spawn.toVector()).divide(new Vector(1000, 1000, 1000));
     }
 
     private Entity getClosest(){
@@ -339,7 +344,21 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         if(e.getRightClicked() != null && entities.contains(e.getRightClicked())){
             e.setCancelled(true);
             if(isLanded){
-                e.getPlayer().openInventory(inventory);
+                if(inventoryOpener == null){
+                    if(money != 0){
+                        if(VaultUtils.get().giveReward(e.getPlayer(), money)){
+                            e.getPlayer().sendMessage(pl.getMessageManager().get("youReceived", new String[]{"reward"}, new String[]{money+""}));
+                        }
+                    }
+                    e.getPlayer().openInventory(inventory);
+                    inventoryOpener = e.getPlayer();
+                }else{
+                    if(inventoryOpener == e.getPlayer()){
+                        e.getPlayer().openInventory(inventory);
+                    }else{
+                        e.getPlayer().sendMessage(pl.getMessageManager().get("carePackageAlreadyOpened"));
+                    }
+                }
             }
         }
     }

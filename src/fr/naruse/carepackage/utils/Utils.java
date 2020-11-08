@@ -12,7 +12,7 @@ import org.bukkit.util.NumberConversions;
 
 import java.util.List;
 
-public class Utils {
+public final class Utils {
 
     public static Location getConfigLocation(FileConfiguration config, String path) {
         if(!config.contains(path+".x")){

@@ -133,10 +133,12 @@ public class Configurations {
 
 
     public boolean tryDelete(String name){
-        if(modelMap.containsKey(name)){
-            File file = configurationFile.get(modelMap.get(name));
-            file.delete();
-            return true;
+        for (String s : modelMap.keySet()) {
+            if(s.equalsIgnoreCase(name)){
+                File file = configurationFile.get(modelMap.get(s));
+                file.delete();
+                return true;
+            }
         }
         return false;
     }

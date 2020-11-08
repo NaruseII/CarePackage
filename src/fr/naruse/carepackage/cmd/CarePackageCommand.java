@@ -1,14 +1,13 @@
 package fr.naruse.carepackage.cmd;
 
 import com.google.common.collect.Lists;
-import com.sk89q.worldedit.Vector;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldedit.bukkit.selections.Selection;
 import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackageType;
 import fr.naruse.carepackage.inventory.InventorySet;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.Utils;
+import fr.naruse.carepackage.utils.WorldEditUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -106,6 +105,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             pl.getConfig().set("cp."+id+".location.destination.y", p.getLocation().getY()+1);
             pl.getConfig().set("cp."+id+".location.destination.z", p.getLocation().getZ());
             pl.getConfig().set("cp."+id+".location.destination.world", p.getWorld().getName());
+            pl.getConfig().set("cp."+id+".money", 0);
             pl.saveConfig();
             return sendMessage(sender, "destinationSetted");
         }
@@ -196,21 +196,23 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "worldEditNotFound");
             }
 
-            Selection selection = worldEditPlugin.getSelection(p);
-            if(selection == null) {
-                return sendMessage(sender, "noSelection.");
+            Block[] points = WorldEditUtils.getPointsBlock(worldEditPlugin, p);
+            if(points == null){
+                return sendMessage(sender, "noSelection");
             }
-            Vector min = selection.getNativeMinimumPoint();
-            Vector max = selection.getNativeMaximumPoint();
-            Block block = selection.getWorld().getBlockAt(min.getBlockX(), min.getBlockY(), min.getBlockZ());
-            Block block2 = selection.getWorld().getBlockAt(max.getBlockX(), max.getBlockY(), max.getBlockZ());
 
             Location origin = p.getLocation().add(0, -1, 0);
 
             configuration.set("name", args[1]);
             configuration.set("radius", radius);
+            configuration.set("particleViewRadius", 100);
+            configuration.set("soundBarrierEffectRadius", 50);
+            configuration.set("speedReducer", 0.005);
+            configuration.set("randomXZSpawnRange", 35);
+            configuration.set("secondBeforeRemove", 60);
+            configuration.set("timeBeforeBarrierEffect", 8);
 
-            List<Block> list = Utils.blocksFromTwoPoints(block.getLocation(), block2.getLocation());
+            List<Block> list = Utils.blocksFromTwoPoints(points[0].getLocation(), points[1].getLocation());
             int count = 0;
             for (int i = 0; i < list.size(); i++) {
                 Block b = list.get(i);
@@ -346,6 +348,65 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             return sendMessage(sender, "particleDeleted");
         }
+
+        //SET MODEL PROPERTY
+        if(args[0].equalsIgnoreCase("setModelProperty")){
+            if(args.length < 4){
+                return help(sender, 2);
+            }
+
+            CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
+            if(type == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
+            if(configuration == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            ModelProperty property;
+            try{
+                property = ModelProperty.valueOf(args[2]);
+            }catch (Exception e){
+                return sendMessage(sender, "propertyNotFound");
+            }
+            Object obj;
+            try{
+                obj = property.getClazz().getMethod("valueOf", String.class).invoke(null, args[3]);
+            }catch (Exception e){
+                return sendMessage(sender, "wrongNumber");
+            }
+
+            configuration.set(property.getName(), obj);
+            pl.getConfigurations().saveConfigs();
+
+            return sendMessage(sender, "propertySaved");
+        }
+
+        //SET REWARD
+        if(args[0].equalsIgnoreCase("setReward")){
+            if(args.length < 3){
+                return help(sender, 2);
+            }
+
+            int id = getIdFromName(args[1]);
+            if(id == -1){
+                return sendMessage(sender, "carePackageNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            int money;
+            try{
+                money = Integer.valueOf(args[2]);
+            }catch (Exception e){
+                return sendMessage(sender, "wrongNumber");
+            }
+
+            pl.getConfig().set("cp."+id+".money", money);
+            pl.saveConfig();
+
+            return sendMessage(sender, "particleDeleted");
+        }
         return false;
     }
 
@@ -367,10 +428,9 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendNormalMessage(sender, "§6/§7cp addModelParticle <Model Name> <Particle>");
             sendNormalMessage(sender, "§6Ex: §e{type:FLAME, count:2, percentage:100, xOffset:0.2, yOffset:1, zOffset:0.2, speed:0, yReduced:1, boost:true}");
             sendNormalMessage(sender, "§6/§7cp clearModelParticle <Model Name>");
+            sendNormalMessage(sender, "§6/§7cp setModelProperty <Model Name> <Property> <New Value>");
+            sendNormalMessage(sender, "§6/§7cp setReward <CarePackage Name> <Money>");
            /*
-
-            sendNormalMessage(sender, "§6/§7cp ");
-            sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");
             sendNormalMessage(sender, "§6/§7cp ");*/
@@ -432,7 +492,17 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             fillList(list, args[1]);
         }
         if(args.length == 2 && args[0].equalsIgnoreCase("deleteModel")){
-            fillList(list, args[2]);
+            fillList(list, args[1]);
+        }
+        if(args.length == 2 && args[0].equalsIgnoreCase("setModelProperty")){
+            fillList(list, args[1]);
+        }
+        if(args.length == 3 && args[0].equalsIgnoreCase("setModelProperty")){
+            for (ModelProperty value : ModelProperty.values()) {
+                if(value.name().contains(args[2].toUpperCase())){
+                    list.add(value.name());
+                }
+            }
         }
         return list;
     }
@@ -442,6 +512,31 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             if(type.getName().contains(arg.toUpperCase())){
                 list.add(type.getName());
             }
+        }
+    }
+
+    enum ModelProperty {
+        PARTICLE_VIEW_RADIUS("particleViewRadius", Integer.class),
+        SOUND_BARRIER_EFFECT_RADIUS("soundBarrierEffectRadius", Integer.class),
+        SPEED_REDUCER("speedReducer", Double.class),
+        RANDOM_XZ_SPAWN_RANGE("randomXZSpawnRange", Integer.class),
+        SECOND_BEFORE_REMOVE("secondBeforeRemove", Integer.class),
+        TIME_BEFORE_BARRIER_EFFECT("timeBeforeBarrierEffect", Integer.class),
+        ;
+
+        private String name;
+        private Class clazz;
+        ModelProperty(String name, Class clazz) {
+            this.name = name;
+            this.clazz = clazz;
+        }
+
+        public Class getClazz() {
+            return clazz;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }

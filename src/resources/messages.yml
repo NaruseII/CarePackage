@@ -25,6 +25,10 @@ english:
     modelDeleted: "§aModel deleted."
     particleSaved: "§aParticle saved."
     particleDeleted: "§aParticles deleted."
+    propertyNotFound: "§cProperty not found."
+    propertySaved: "§aProperty saved."
+  youReceived: "§aYou received {reward} $."
+  carePackageAlreadyOpened: "§cCare Package already opened."
   inventory:
     set:
       name: "§4§lCare Package's items"
@@ -60,6 +64,10 @@ french:
     modelDeleted: "§aModèle supprimé."
     particleSaved: "§aParticule enregistrée."
     particleDeleted: "§aParticules supprimées."
+    propertyNotFound: "§cPropriété introuvable."
+    propertySaved: "§aPropriété enregistrée."
+  youReceived: "§aVous avez reçu {reward} $."
+  carePackageAlreadyOpened: "§cCare Package déjà ouvert."
   inventory:
     set:
       name: "§4§lItems du Care Package"

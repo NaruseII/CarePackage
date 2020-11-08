@@ -1,8 +1,1 @@
 currentLang: "english"
-
-soundBarrierEffectRadius: 50
-timeBeforeBarrierEffect: 8
-particleViewRadius: 100
-speedReducer: 0.005
-randomXZSpawnRange: 35
-secondBeforeRemove: 60

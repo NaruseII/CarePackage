@@ -38,18 +38,19 @@ public class CarePackageType {
         return name;
     }
 
-    public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory){
+    public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory, int money){
         try{
             if(isCustom){
                 if(!modelMap.containsKey(this)){
                     return null;
                 }
                 Model model = modelMap.get(this);
-                Constructor<CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(), Location.class, Inventory.class, Model.class);
-                return constructor.newInstance(pl, name, this, location, inventory, model);
+                Constructor<CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(),
+                        Location.class, Inventory.class, Model.class, int.class);
+                return constructor.newInstance(pl, name, this, location, inventory, model, money);
             }else{
-                Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class);
-                return constructor.newInstance(pl, name, location, inventory);
+                Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class, int.class);
+                return constructor.newInstance(pl, name, location, inventory, money);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -57,11 +58,13 @@ public class CarePackageType {
         return null;
     }
 
-    public void registerCustomModel(String name, List<BlockInfo> blockInfos, int radius, ParticleInfo[] particleInfos){
+    public void registerCustomModel(String name, List<BlockInfo> blockInfos, int radius, ParticleInfo[] particleInfos, int particleViewRadius,
+                                    int soundBarrierEffectRadius, double speedReducer, int randomXZSpawnRange,
+                                    int secondBeforeRemove, int timeBeforeBarrierEffect){
         if(modelMap.containsKey(this)){
             return;
         }
-        Model model = new Model(name, blockInfos, radius, particleInfos);
+        Model model = new Model(name, blockInfos, radius, particleInfos, particleViewRadius, soundBarrierEffectRadius, speedReducer, randomXZSpawnRange, secondBeforeRemove, timeBeforeBarrierEffect);
         modelMap.put(this, model);
     }
 

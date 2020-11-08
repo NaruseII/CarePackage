@@ -20,8 +20,9 @@ public class CarePackageSimple extends CarePackage {
             new ParticleInfo(EnumParticle.SMOKE_NORMAL, 1, 20),
     };
 
-    public CarePackageSimple(CarePackagePlugin pl, String name, Location destination, Inventory inventory) {
-        super(pl, name, CarePackageType.SIMPLE, destination, inventory);
+    public CarePackageSimple(CarePackagePlugin pl, String name, Location destination, Inventory inventory, int money) {
+        super(pl, name, CarePackageType.SIMPLE, destination, inventory, money);
+        setSpawnLocation();
     }
 
     @Override
@@ -140,5 +141,35 @@ public class CarePackageSimple extends CarePackage {
     @Override
     protected double getRadius() {
         return 4;
+    }
+
+    @Override
+    protected int getParticleViewRadius() {
+        return 100;
+    }
+
+    @Override
+    protected int getSoundBarrierEffectRadius() {
+        return 100;
+    }
+
+    @Override
+    protected double getSpeedReducer() {
+        return 0.005;
+    }
+
+    @Override
+    protected int getRandomXZSpawnRange() {
+        return 35;
+    }
+
+    @Override
+    protected int getSecondBeforeRemove() {
+        return 60;
+    }
+
+    @Override
+    protected int getTimeBeforeBarrierEffect() {
+        return 8;
     }
 }

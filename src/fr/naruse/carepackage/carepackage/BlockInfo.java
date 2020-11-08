@@ -1,6 +1,10 @@
 package fr.naruse.carepackage.carepackage;
 
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import org.bukkit.Material;
+
+import java.util.Map;
 
 public class BlockInfo {
 
@@ -36,5 +40,31 @@ public class BlockInfo {
 
     public Material getMaterial() {
         return material;
+    }
+
+    public String toJson(Gson gson) {
+        Map<String, Object> map = Maps.newHashMap();
+
+        map.put("type", material.name());
+        map.put("data", data);
+        map.put("x", x);
+        map.put("y", y);
+        map.put("z", z);
+
+        return gson.toJson(map);
+    }
+
+    public static class Builder {
+
+        public static BlockInfo fromJson(Map<String, Object> map) {
+
+            Material material = Material.valueOf((String) map.get("type"));
+            byte data = (byte) (int) map.get("data");
+            int x = (int) map.get("x");
+            int y = (int) map.get("y");
+            int z = (int) map.get("z");
+
+            return new BlockInfo(material, data, x, y, z);
+        }
     }
 }

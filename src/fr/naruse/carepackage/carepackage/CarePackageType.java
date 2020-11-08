@@ -16,7 +16,6 @@ public class CarePackageType {
 
     private static final List<CarePackageType> carePackageTypes = Lists.newArrayList();
     private static final Map<String, CarePackageType> carePackageTypeMap = Maps.newHashMap();
-    private static final Map<CarePackageType, Model> modelMap = Maps.newHashMap();
 
     public static final CarePackageType SIMPLE = new CarePackageType(CarePackageSimple.class, "SIMPLE", false);
 
@@ -28,6 +27,9 @@ public class CarePackageType {
     private Class clazz;
     private String name;
     private boolean isCustom;
+
+    private Model model;
+
     public CarePackageType(Class<? extends CarePackage> clazz, String name, boolean isCustom) {
         this.clazz = clazz;
         this.name = name;
@@ -38,13 +40,16 @@ public class CarePackageType {
         return name;
     }
 
+    public Model getModel() {
+        return model;
+    }
+
     public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory, int money){
         try{
             if(isCustom){
-                if(!modelMap.containsKey(this)){
+                if(model == null){
                     return null;
                 }
-                Model model = modelMap.get(this);
                 Constructor<CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(),
                         Location.class, Inventory.class, Model.class, int.class);
                 return constructor.newInstance(pl, name, this, location, inventory, model, money);
@@ -61,11 +66,11 @@ public class CarePackageType {
     public void registerCustomModel(String name, List<BlockInfo> blockInfos, int radius, ParticleInfo[] particleInfos, int particleViewRadius,
                                     int soundBarrierEffectRadius, double speedReducer, int randomXZSpawnRange,
                                     int secondBeforeRemove, int timeBeforeBarrierEffect){
-        if(modelMap.containsKey(this)){
+        if(model != null){
             return;
         }
         Model model = new Model(name, blockInfos, radius, particleInfos, particleViewRadius, soundBarrierEffectRadius, speedReducer, randomXZSpawnRange, secondBeforeRemove, timeBeforeBarrierEffect);
-        modelMap.put(this, model);
+        this.model = model;
     }
 
     public static CarePackageType registerCarePackage(String name){

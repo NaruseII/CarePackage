@@ -1,8 +1,12 @@
 package fr.naruse.carepackage.carepackage;
 
+import com.google.common.collect.Maps;
+import com.google.gson.Gson;
 import net.minecraft.server.v1_12_R1.EnumParticle;
 import net.minecraft.server.v1_12_R1.PacketPlayOutWorldParticles;
 import org.bukkit.Location;
+
+import java.util.Map;
 
 public class ParticleInfo {
 
@@ -65,5 +69,40 @@ public class ParticleInfo {
 
     public EnumParticle getParticle() {
         return particle;
+    }
+
+    public String toJson(Gson gson) {
+        Map<String, Object> map = Maps.newHashMap();
+
+        map.put("count", count);
+        map.put("percentage", percentage);
+        map.put("xOffset", xOffset);
+        map.put("yOffset", yOffset);
+        map.put("zOffset", zOffset);
+        map.put("speed", speed);
+        map.put("yReduced", yReduced);
+        map.put("canBoost", canBoost);
+
+        return gson.toJson(map);
+    }
+
+    public static class Builder {
+
+        public static ParticleInfo fromJson(Map<String, Object> map) {
+
+            EnumParticle particle = EnumParticle.valueOf((String) map.get("type"));
+            int count = (int) map.get("count");
+            int percentage = (int) map.get("percentage");
+
+            float xOffset = (float) (int) map.get("xOffset");
+            float yOffset = (float) (int) map.get("yOffset");
+            float zOffset = (float) (int) map.get("zOffset");
+            float speed = (float) (int) map.get("speed");
+            int yReduced = (int) map.get("yReduced");
+            boolean canBoost = (boolean) map.get("canBoost");
+
+            return new ParticleInfo(particle, count, percentage, xOffset, yOffset, zOffset, speed, yReduced
+            , canBoost);
+        }
     }
 }

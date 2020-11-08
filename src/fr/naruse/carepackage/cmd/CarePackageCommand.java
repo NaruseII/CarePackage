@@ -114,7 +114,11 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
         if(args[0].equalsIgnoreCase("reload")){
             CarePackageType.clear();
             pl.getConfigurations().reload();
-            pl.getCarePackages().reload();
+            if(pl.getSqlManager() != null){
+                pl.getSqlManager().loadModels(true);
+            }else{
+                pl.getCarePackages().reload();
+            }
             return sendMessage(sender, "reloaded");
         }
 
@@ -184,7 +188,9 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "wrongNumber");
             }
 
-            CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
+            args[1] = args[1].toUpperCase();
+
+            CarePackageType type = CarePackageType.valueOf(args[1]);
             if(type != null){
                 return sendMessage(sender, "modelAlreadyUsed");
             }
@@ -329,7 +335,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //CLEAR MODEL PARTICLE
         if(args[0].equalsIgnoreCase("clearModelParticle")){
-            if(args.length < 1){
+            if(args.length < 2){
                 return help(sender, 2);
             }
 

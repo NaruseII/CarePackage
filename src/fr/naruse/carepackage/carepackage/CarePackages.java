@@ -18,6 +18,7 @@ public class CarePackages {
 
     private CarePackagePlugin pl;
     private final List<CarePackage> carePackages = Lists.newArrayList();
+    private final List<CarePackageType> badlyConfiguredModels = Lists.newArrayList();
 
     public CarePackages(CarePackagePlugin pl) {
         this.pl = pl;
@@ -29,6 +30,7 @@ public class CarePackages {
             carePackage.disable();
         }
         carePackages.clear();
+        badlyConfiguredModels.clear();
 
         int modelCount = 0;
         for (FileConfiguration model : pl.getConfigurations().getModels()) {
@@ -122,6 +124,8 @@ public class CarePackages {
                 }
             }catch (Exception e){
                 pl.getLogger().warning("[Model] Particles for model '"+name+"' badly configured");
+                badlyConfiguredModels.add(carePackageType);
+                e.printStackTrace();
                 continue;
             }
 
@@ -138,6 +142,10 @@ public class CarePackages {
                 CarePackageType carePackageType = CarePackageType.valueOf(pl.getConfig().getString("cp."+i+".type"));
                 if(carePackageType == null){
                     pl.getLogger().warning("Can't recognize CarePackageType for Care Package '"+name+"'");
+                    continue;
+                }
+
+                if(badlyConfiguredModels.contains(carePackageType)){
                     continue;
                 }
 
@@ -178,5 +186,9 @@ public class CarePackages {
 
     public List<CarePackage> getCarePackages() {
         return carePackages;
+    }
+
+    public List<CarePackageType> getBadlyConfiguredModels() {
+        return badlyConfiguredModels;
     }
 }

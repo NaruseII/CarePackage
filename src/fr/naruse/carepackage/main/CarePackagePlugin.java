@@ -4,6 +4,7 @@ import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackages;
 import fr.naruse.carepackage.cmd.CarePackageCommand;
 import fr.naruse.carepackage.config.Configurations;
+import fr.naruse.carepackage.sql.SQLManager;
 import fr.naruse.carepackage.manager.MessageManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,6 +15,7 @@ public class CarePackagePlugin extends JavaPlugin {
     private Configurations configurations;
     private MessageManager.StringManager messageManager;
     private CarePackages carePackages;
+    private SQLManager sqlManager;
 
     @Override
     public void onEnable() {
@@ -26,6 +28,9 @@ public class CarePackagePlugin extends JavaPlugin {
         this.configurations = new Configurations(this);
         this.messageManager = new MessageManager.StringManager(this);
         this.carePackages = new CarePackages(this);
+        if(getServer().getPluginManager().getPlugin("DBAPI") != null){
+            this.sqlManager = new SQLManager(this);
+        }
 
         getCommand("cp").setExecutor(new CarePackageCommand(this));
         getCommand("carepackage").setExecutor(new CarePackageCommand(this));
@@ -49,5 +54,9 @@ public class CarePackagePlugin extends JavaPlugin {
 
     public CarePackages getCarePackages() {
         return carePackages;
+    }
+
+    public SQLManager getSqlManager() {
+        return sqlManager;
     }
 }

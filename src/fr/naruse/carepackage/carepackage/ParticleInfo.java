@@ -104,5 +104,50 @@ public class ParticleInfo {
             return new ParticleInfo(particle, count, percentage, xOffset, yOffset, zOffset, speed, yReduced
             , canBoost);
         }
+
+        public static ParticleInfo fromString(String format){
+            EnumParticle particle = EnumParticle.FLAME;
+            int count = 1;
+            int percentage = 100;
+            float xOffset = 0.2f;
+            float yOffset = 1f;
+            float zOffset = 0.2f;
+            int yReduced = 1;
+            float speed = 0;
+            boolean boost = false;
+            for (String s : format.replace("{", "").replace("}", "").split(",")) {
+                String[] args = s.split(":");
+                switch (args[0]){
+                    case "type":
+                        particle = EnumParticle.valueOf(args[1]);
+                        break;
+                    case "count":
+                        count = Integer.valueOf(args[1]);
+                        break;
+                    case "percentage":
+                        percentage = Integer.valueOf(args[1]);
+                        break;
+                    case "xOffset":
+                        xOffset = Float.valueOf(args[1]);
+                        break;
+                    case "yOffset":
+                        yOffset = Float.valueOf(args[1]);
+                        break;
+                    case "zOffset":
+                        zOffset = Float.valueOf(args[1]);
+                        break;
+                    case "speed":
+                        speed = Float.valueOf(args[1]);
+                        break;
+                    case "yReduced":
+                        yReduced = Integer.valueOf(args[1]);
+                        break;
+                    case "boost":
+                        boost = Boolean.valueOf(args[1]);
+                        break;
+                }
+            }
+            return new ParticleInfo(particle, count, percentage, xOffset, yOffset, zOffset, speed, yReduced, boost);
+        }
     }
 }

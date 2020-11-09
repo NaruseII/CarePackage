@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import fr.naruse.carepackage.carepackage.BlockInfo;
 import fr.naruse.carepackage.carepackage.CarePackageType;
+import fr.naruse.carepackage.carepackage.Model;
 import fr.naruse.carepackage.carepackage.ParticleInfo;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.dbapi.api.DatabaseAPI;
@@ -24,6 +25,7 @@ public class SQLManager {
 
     private static final Gson GSON = new Gson();
     private static final Type MAP_TYPE = new TypeToken<Map<String, Object>>(){}.getType();
+    private static final String[] ARGS = new String[]{"name", "properties"};
 
     private CarePackagePlugin pl;
 
@@ -138,16 +140,35 @@ public class SQLManager {
         SQLRequest sqlRequest = new SQLRequest(SQLHelper.getTruncateRequest(TABLE_NAME));
         database.prepareStatement(sqlRequest);
 
-        String[] args = new String[]{"name", "properties"};
-
         for (CarePackageType type : CarePackageType.values()) {
             if(type.getModel() == null){
                 continue;
             }
             String b64 = Base64.getEncoder().encodeToString(type.getModel().toJson(GSON).getBytes());
-            SQLRequest sqlRequest1 = new SQLRequest(SQLHelper.getInsertRequest(TABLE_NAME, args), type.getName(), b64);
+            SQLRequest sqlRequest1 = new SQLRequest(SQLHelper.getInsertRequest(TABLE_NAME, ARGS), type.getName(), b64);
             database.prepareStatement(sqlRequest1);
         }
+    }
+
+    public void saveModel(Model model) {
+        SQLRequest sqlRequest = new SQLRequest(SQLHelper.getSelectRequest(TABLE_NAME, "properties", "name"), model.getName());
+        database.hasAccount(sqlRequest, new SQLResponse() {
+            @Override
+            public void runSynchronously(DBAPICore core, Object o) {
+                if(o == null){
+                    return;
+                }
+                boolean exists = (boolean) o;
+                String b64 = Base64.getEncoder().encodeToString(model.toJson(GSON).getBytes());
+                SQLRequest sqlRequest1;
+                if(exists){
+                    sqlRequest1 = new SQLRequest(SQLHelper.getUpdateRequest(TABLE_NAME, "properties", "name"), b64, model.getName());
+                }else{
+                    sqlRequest1 = new SQLRequest(SQLHelper.getInsertRequest(TABLE_NAME, ARGS), model.getName(), b64);
+                }
+                database.prepareStatement(sqlRequest1);
+            }
+        });
     }
 
     public void deleteModel(String name) {

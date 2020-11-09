@@ -16,6 +16,7 @@ public abstract class AbstractInventory implements Listener {
     protected CarePackagePlugin pl;
     protected Player p;
     private boolean isDone = false;
+    protected boolean canInteract = true;
     protected Inventory inventory;
 
     public AbstractInventory(CarePackagePlugin pl, Player p, String invName, int size) {
@@ -56,6 +57,9 @@ public abstract class AbstractInventory implements Listener {
         }
         if(e.getCurrentItem() == null){
             return;
+        }
+        if(!canInteract){
+            e.setCancelled(true);
         }
         actionPerformed(p, e.getCurrentItem(), e.getAction(), e.getSlot());
     }

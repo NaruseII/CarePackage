@@ -49,18 +49,19 @@ public class CarePackageType {
         carePackageTypeMap.remove(this);
     }
 
-    public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory, int money){
+    public CarePackage build(CarePackagePlugin pl, String name, Location location, Inventory inventory, int money, Schedule schedule){
         try{
             if(isCustom){
                 if(model == null){
                     return null;
                 }
                 Constructor<CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(),
-                        Location.class, Inventory.class, Model.class, int.class);
-                return constructor.newInstance(pl, name, this, location, inventory, model, money);
+                        Location.class, Inventory.class, Model.class, int.class, Schedule.class);
+                return constructor.newInstance(pl, name, this, location, inventory, model, money, schedule);
             }else{
-                Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class, int.class);
-                return constructor.newInstance(pl, name, location, inventory, money);
+                Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class, int.class,
+                        Schedule.class);
+                return constructor.newInstance(pl, name, location, inventory, money, schedule);
             }
         }catch (Exception e){
             e.printStackTrace();

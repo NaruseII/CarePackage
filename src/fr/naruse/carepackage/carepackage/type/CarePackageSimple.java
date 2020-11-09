@@ -3,6 +3,7 @@ package fr.naruse.carepackage.carepackage.type;
 import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackageType;
 import fr.naruse.carepackage.carepackage.ParticleInfo;
+import fr.naruse.carepackage.carepackage.Schedule;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.Utils;
 import net.minecraft.server.v1_12_R1.EnumParticle;
@@ -20,8 +21,8 @@ public class CarePackageSimple extends CarePackage {
             new ParticleInfo(EnumParticle.SMOKE_NORMAL, 1, 20),
     };
 
-    public CarePackageSimple(CarePackagePlugin pl, String name, Location destination, Inventory inventory, int money) {
-        super(pl, name, CarePackageType.SIMPLE, destination, inventory, money);
+    public CarePackageSimple(CarePackagePlugin pl, String name, Location destination, Inventory inventory, int money, Schedule schedule) {
+        super(pl, name, CarePackageType.SIMPLE, destination, inventory, money, schedule);
         setSpawnLocation();
     }
 
@@ -155,7 +156,7 @@ public class CarePackageSimple extends CarePackage {
 
     @Override
     protected double getSpeedReducer() {
-        return 0.005;
+        return 0.015;
     }
 
     @Override

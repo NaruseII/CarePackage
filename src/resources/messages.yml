@@ -27,15 +27,31 @@ english:
     particleDeleted: "§aParticles deleted."
     propertyNotFound: "§cProperty not found."
     propertySaved: "§aProperty saved."
+    scheduleSaved: "§aSchedule saved."
+    cantChangeThisModel: "§cCannot edit this model."
+    particleBadlyConfigured: "§cParticles badly configured."
   youReceived: "§aYou received {reward} $."
   carePackageAlreadyOpened: "§cCare Package already opened."
+  carePackagedSpawned: "§eA §6Care Package§e will spawn in §6X:{x} Y:{y} Z:{z} §eon the world §6{world}§e!"
   inventory:
     set:
       name: "§4§lCare Package's items"
       saved: "§aCare Package {name}'s inventory saved."
     get:
       name: "§4§lCare Package's inventory"
-
+    cpInfo:
+      name: "§4§lCare Package's information"
+      type: "§e§lType: §e{type}"
+      cpName: "§a§lName: §a{name}"
+      destination: "§3§lDestination"
+      money: "§c§lMoney: §c{money}"
+      schedule: "§5§lSchedule"
+    modelInfo:
+      name: "§4§lModel's information"
+      modelName: "§a§lName: §a{name}"
+      properties: "§3§lProperties"
+      radius: "§c§lProtection Radius: §c{radius}"
+      blockInfos: "§d§lBlock Info: §d{size} blocks"
 
 french:
   commands:
@@ -66,11 +82,28 @@ french:
     particleDeleted: "§aParticules supprimées."
     propertyNotFound: "§cPropriété introuvable."
     propertySaved: "§aPropriété enregistrée."
+    scheduleSaved: "§aProgramme enregistré."
+    cantChangeThisModel: "§cImpossible d'éditer ce modèle."
+    particleBadlyConfigured: "§cParticules mal configurées."
   youReceived: "§aVous avez reçu {reward} $."
   carePackageAlreadyOpened: "§cCare Package déjà ouvert."
+  carePackagedSpawned: "§eUn §6Care Package§e va apparaître en §6X:{x} Y:{y} Z:{z} §esur le monde §6{world}§e!"
   inventory:
     set:
       name: "§4§lItems du Care Package"
       saved: "§aL'inventaire du Care Package '{name}' est enregistré."
     get:
       name: "§4§lInventaire du Care Package"
+    cpInfo:
+      name: "§c§lInformations du Care Package"
+      type: "§e§lType: §e{type}"
+      cpName: "§a§lNom: §a{name}"
+      destination: "§3§lDestination"
+      money: "§c§lArgent: §c{money}"
+      schedule: "§5§lProgramme"
+    modelInfo:
+      name: "§4§lInformations du Modèle"
+      modelName: "§a§lNom: §a{name}"
+      properties: "§3§lPropriétés"
+      radius: "§c§lRayon de protection: §c{radius}"
+      blockInfos: "§d§lInformation des blocs: §d{size} blocs"

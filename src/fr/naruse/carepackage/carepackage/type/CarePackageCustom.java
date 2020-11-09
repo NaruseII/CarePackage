@@ -21,8 +21,9 @@ public class CarePackageCustom extends CarePackage {
 
     private final Model model;
 
-    public CarePackageCustom(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, Model model, int money) {
-        super(pl, name, type, destination, inventory, money);
+    public CarePackageCustom(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, Model model,
+                             int money, Schedule schedule) {
+        super(pl, name, type, destination, inventory, money, schedule);
         this.model = model;
         setSpawnLocation();
         if(model.getParticleInfos() != null){
@@ -80,31 +81,31 @@ public class CarePackageCustom extends CarePackage {
 
     @Override
     protected int getParticleViewRadius() {
-        return model.getParticleViewRadius();
+        return model.getProperty(Model.ModelProperty.PARTICLE_VIEW_RADIUS);
     }
 
     @Override
     protected int getSoundBarrierEffectRadius() {
-        return model.getSoundBarrierEffectRadius();
+        return model.getProperty(Model.ModelProperty.SOUND_BARRIER_EFFECT_RADIUS);
     }
 
     @Override
     protected double getSpeedReducer() {
-        return model.getSpeedReducer();
+        return model.getProperty(Model.ModelProperty.SPEED_REDUCER);
     }
 
     @Override
     protected int getRandomXZSpawnRange() {
-        return model.getRandomXZSpawnRange();
+        return model.getProperty(Model.ModelProperty.RANDOM_XZ_SPAWN_RANGE);
     }
 
     @Override
     protected int getSecondBeforeRemove() {
-        return model.getSecondBeforeRemove();
+        return model.getProperty(Model.ModelProperty.SECOND_BEFORE_REMOVE);
     }
 
     @Override
     protected int getTimeBeforeBarrierEffect() {
-        return model.getTimeBeforeBarrierEffect();
+        return model.getProperty(Model.ModelProperty.TIME_BEFORE_BARRIER_EFFECT);
     }
 }

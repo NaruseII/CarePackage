@@ -4,6 +4,10 @@ import com.google.common.collect.Lists;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackageType;
+import fr.naruse.carepackage.carepackage.Model;
+import fr.naruse.carepackage.carepackage.ParticleInfo;
+import fr.naruse.carepackage.inventory.InventoryCPInfo;
+import fr.naruse.carepackage.inventory.InventoryModelInfo;
 import fr.naruse.carepackage.inventory.InventorySet;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.Utils;
@@ -19,6 +23,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class CarePackageCommand implements CommandExecutor, TabCompleter {
@@ -213,7 +218,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             configuration.set("radius", radius);
             configuration.set("particleViewRadius", 100);
             configuration.set("soundBarrierEffectRadius", 50);
-            configuration.set("speedReducer", 0.005);
+            configuration.set("speedReducer", 0.015);
             configuration.set("randomXZSpawnRange", 35);
             configuration.set("secondBeforeRemove", 60);
             configuration.set("timeBeforeBarrierEffect", 8);
@@ -321,28 +326,45 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
 
-            FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
-            if(configuration == null){
-                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
-            }
-
-            List<String> list;
-            if(configuration.contains("particles")){
-                list = configuration.getStringList("particles");
-                if(list.contains("empty")){
-                    list.clear();
-                }
-            }else{
-                list = Lists.newArrayList();
-            }
             StringBuilder builder = new StringBuilder(args[2]);
             for (int i = 3; i < args.length; i++) {
                 builder.append(args[i]);
             }
-            list.add(builder.toString());
 
-            configuration.set("particles", list);
-            pl.getConfigurations().saveConfigs();
+            if(pl.getSqlManager() != null){
+                Model model = type.getModel();
+                if(model == null){
+                    return sendMessage(sender, "cantChangeThisModel");
+                }
+                try{
+                    ParticleInfo[] particleInfos = model.getParticleInfos();
+                    particleInfos = Arrays.copyOf(particleInfos, particleInfos.length);
+                    particleInfos[particleInfos.length-1] = ParticleInfo.Builder.fromString(builder.toString());
+                    model.setParticleInfos(particleInfos);
+                    pl.getSqlManager().saveModel(model);
+                }catch (Exception e){
+                    return sendMessage(sender, "particleBadlyConfigured");
+                }
+            }else{
+                FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
+                if(configuration == null){
+                    return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+                }
+
+                List<String> list;
+                if(configuration.contains("particles")){
+                    list = configuration.getStringList("particles");
+                    if(list.contains("empty")){
+                        list.clear();
+                    }
+                }else{
+                    list = Lists.newArrayList();
+                }
+                list.add(builder.toString());
+
+                configuration.set("particles", list);
+                pl.getConfigurations().saveConfigs();
+            }
 
             return sendMessage(sender, "particleSaved");
         }
@@ -358,13 +380,22 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
 
-            FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
-            if(configuration == null){
-                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
-            }
+            if(pl.getSqlManager() != null){
+                Model model = type.getModel();
+                if(model == null){
+                    return sendMessage(sender, "cantChangeThisModel");
+                }
+                model.setParticleInfos(new ParticleInfo[0]);
+                pl.getSqlManager().saveModel(model);
+            }else{
+                FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
+                if(configuration == null){
+                    return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+                }
 
-            configuration.set("particles", Lists.newArrayList("empty"));
-            pl.getConfigurations().saveConfigs();
+                configuration.set("particles", Lists.newArrayList("empty"));
+                pl.getConfigurations().saveConfigs();
+            }
 
             return sendMessage(sender, "particleDeleted");
         }
@@ -380,14 +411,9 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
 
-            FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
-            if(configuration == null){
-                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
-            }
-
-            ModelProperty property;
+            Model.ModelProperty property;
             try{
-                property = ModelProperty.valueOf(args[2]);
+                property = Model.ModelProperty.valueOf(args[2]);
             }catch (Exception e){
                 return sendMessage(sender, "propertyNotFound");
             }
@@ -398,8 +424,22 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "wrongNumber");
             }
 
-            configuration.set(property.getName(), obj);
-            pl.getConfigurations().saveConfigs();
+            if(pl.getSqlManager() != null){
+                Model model = type.getModel();
+                if(model == null){
+                    return sendMessage(sender, "cantChangeThisModel");
+                }
+                model.setProperty(property, obj);
+                pl.getSqlManager().saveModel(model);
+            }else{
+                FileConfiguration configuration = pl.getConfigurations().getModelConfiguration(args[1]);
+                if(configuration == null){
+                    return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+                }
+
+                configuration.set(property.getName(), obj);
+                pl.getConfigurations().saveConfigs();
+            }
 
             return sendMessage(sender, "propertySaved");
         }
@@ -427,6 +467,60 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             return sendMessage(sender, "particleDeleted");
         }
+
+        //SET SCHEDULE
+        if(args[0].equalsIgnoreCase("setSchedule")){
+            if(args.length < 3){
+                return help(sender, 2);
+            }
+
+            int id = getIdFromName(args[1]);
+            if(id == -1){
+                return sendMessage(sender, "carePackageNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            StringBuilder builder = new StringBuilder(args[2]);
+            for (int i = 3; i < args.length; i++) {
+                builder.append(args[i]);
+            }
+
+            pl.getConfig().set("cp."+id+".schedule", builder.toString());
+            pl.saveConfig();
+
+            return sendMessage(sender, "scheduleSaved");
+        }
+
+        //INFORMATION CP
+        if(args[0].equalsIgnoreCase("informationCP")){
+            if(args.length < 2){
+                return help(sender, 3);
+            }
+
+            int id = getIdFromName(args[1]);
+            if(id == -1){
+                return sendMessage(sender, "carePackageNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            new InventoryCPInfo(pl, p, id);
+
+            return true;
+        }
+
+        //INFORMATION MODEL
+        if(args[0].equalsIgnoreCase("informationModel")){
+            if(args.length < 2){
+                return help(sender, 3);
+            }
+
+            CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
+            if(type == null){
+                return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
+            }
+
+            new InventoryModelInfo(pl, p, type.getModel());
+
+            return true;
+        }
         return false;
     }
 
@@ -441,7 +535,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendNormalMessage(sender, "§6/§7cp setInventory <CarePackage Name>");
             sendNormalMessage(sender, "§6/§7cp createModel <Model Name> <Radius> §7(With WorldEdit)");
             sendNormalMessage(sender, "§6/§7cp deleteModel <Model Name>");
-            sendNormalMessage(sender, "§bPage: §21/2");
+            sendNormalMessage(sender, "§bPage: §21/3");
         }else if(page == 2){
             sendNormalMessage(sender, "§6/§7cp setLang <French, English>");
             sendNormalMessage(sender, "§6/§7cp list");
@@ -450,11 +544,22 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             sendNormalMessage(sender, "§6/§7cp clearModelParticle <Model Name>");
             sendNormalMessage(sender, "§6/§7cp setModelProperty <Model Name> <Property> <New Value>");
             sendNormalMessage(sender, "§6/§7cp setReward <CarePackage Name> <Money>");
-           /*
-            sendNormalMessage(sender, "§6/§7cp ");
-            sendNormalMessage(sender, "§6/§7cp ");
-            sendNormalMessage(sender, "§6/§7cp ");*/
-            sendNormalMessage(sender, "§bPage: §21/2");
+            sendNormalMessage(sender, "§6/§7cp setSchedule <CarePackage Name> <Schedule>");
+            sendNormalMessage(sender, "§6Ex: §e{every:60, randomSpawn:80, broadcast:true}");
+            sendNormalMessage(sender, "§bPage: §22/3");
+        }else if(page == 3){
+            sendNormalMessage(sender, "§6/§7cp informationModel <Model Name>");
+            sendNormalMessage(sender, "§6/§7cp informationCP <CarePackage Name>");
+           /* sendNormalMessage(sender, "§6/§7cp list");
+            sendNormalMessage(sender, "§6/§7cp addModelParticle <Model Name> <Particle>");
+            sendNormalMessage(sender, "§6Ex: §e{type:FLAME, count:2, percentage:100, xOffset:0.2, yOffset:1, zOffset:0.2, speed:0, yReduced:1, boost:true}");
+            sendNormalMessage(sender, "§6/§7cp clearModelParticle <Model Name>");
+            sendNormalMessage(sender, "§6/§7cp setModelProperty <Model Name> <Property> <New Value>");
+            sendNormalMessage(sender, "§6/§7cp setReward <CarePackage Name> <Money>");
+            sendNormalMessage(sender, "§6/§7cp setSchedule <CarePackage Name> <Schedule>");
+            sendNormalMessage(sender, "§6Ex: §e{every:60, randomSpawn:80, broadcast:true}");
+            sendNormalMessage(sender, "§6/§7cp informationModel <Model Name>");*/
+            sendNormalMessage(sender, "§bPage: §23/3");
         }
         return true;
     }
@@ -505,7 +610,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
         List<String> list = Lists.newArrayList();
-        if(args.length == 2 && args[0].equalsIgnoreCase("spawn")){
+        if(args.length == 2 && (args[0].equalsIgnoreCase("spawn") || args[0].equalsIgnoreCase("setSchedule") || args[0].equalsIgnoreCase("informationCP"))){
             for (CarePackage carePackage : pl.getCarePackages().getCarePackages()) {
                 if(carePackage.getName().contains(args[1])){
                     list.add(carePackage.getName());
@@ -518,14 +623,14 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
         if(args.length == 2 && (args[0].equalsIgnoreCase("addModelParticle") || args[0].equalsIgnoreCase("clearModelParticle"))){
             fillList(list, args[1]);
         }
-        if(args.length == 2 && args[0].equalsIgnoreCase("deleteModel")){
+        if(args.length == 2 && (args[0].equalsIgnoreCase("deleteModel") || args[0].equalsIgnoreCase("informationModel"))){
             fillList(list, args[1]);
         }
         if(args.length == 2 && args[0].equalsIgnoreCase("setModelProperty")){
             fillList(list, args[1]);
         }
         if(args.length == 3 && args[0].equalsIgnoreCase("setModelProperty")){
-            for (ModelProperty value : ModelProperty.values()) {
+            for (Model.ModelProperty value : Model.ModelProperty.values()) {
                 if(value.name().contains(args[2].toUpperCase())){
                     list.add(value.name());
                 }
@@ -539,31 +644,6 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             if(type.getName().contains(arg.toUpperCase())){
                 list.add(type.getName());
             }
-        }
-    }
-
-    enum ModelProperty {
-        PARTICLE_VIEW_RADIUS("particleViewRadius", Integer.class),
-        SOUND_BARRIER_EFFECT_RADIUS("soundBarrierEffectRadius", Integer.class),
-        SPEED_REDUCER("speedReducer", Double.class),
-        RANDOM_XZ_SPAWN_RANGE("randomXZSpawnRange", Integer.class),
-        SECOND_BEFORE_REMOVE("secondBeforeRemove", Integer.class),
-        TIME_BEFORE_BARRIER_EFFECT("timeBeforeBarrierEffect", Integer.class),
-        ;
-
-        private String name;
-        private Class clazz;
-        ModelProperty(String name, Class clazz) {
-            this.name = name;
-            this.clazz = clazz;
-        }
-
-        public Class getClazz() {
-            return clazz;
-        }
-
-        public String getName() {
-            return name;
         }
     }
 }

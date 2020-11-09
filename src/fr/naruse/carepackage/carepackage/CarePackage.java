@@ -35,6 +35,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     protected final String name;
     protected final Inventory inventory;
     protected final int money;
+    protected final Schedule schedule;
 
     protected Location spawn;
     protected Vector vector;
@@ -47,13 +48,14 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     private Entity closestEntity;
     private Player inventoryOpener;
 
-    public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, int money) {
+    public CarePackage(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, int money, Schedule schedule) {
         this.pl = pl;
         this.name = name;
         this.type = type;
         this.destination = destination;
         this.inventory = inventory;
         this.money = money;
+        this.schedule = schedule;
 
         Bukkit.getPluginManager().registerEvents(this, pl);
         this.runTaskTimer(pl, 1, 1);
@@ -62,13 +64,33 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     private int tickCount = 0;
     private int secondCount = 0;
     private int secondCountLanded = 0;
+    private int secondBeforeSpawn = 0;
     @Override
     public void run() {
+        if(tickCount >= 20){
+            tickCount = 0;
+            if(schedule != null){
+                if(secondBeforeSpawn >= schedule.getEvery()) {
+                    secondBeforeSpawn = 0;
+                    if (schedule.getRandomPercentage() >= 100 || RANDOM.nextInt(100) + 1 >= schedule.getRandomPercentage()) {
+                        if (spawn() == 0 && schedule.canBroadcast()) {
+                            Bukkit.broadcastMessage(pl.getMessageManager().get("carePackagedSpawned", new String[]{"x", "y", "z", "world"},
+                                    new String[]{destination.getBlockX() + "", destination.getBlockY() + "", destination.getBlockZ() + "", destination.getWorld().getName()}));
+                        }
+                    }
+                }else{
+                    secondBeforeSpawn++;
+                }
+            }
+        }else{
+            tickCount++;
+        }
+
         if(!isSpawned){
             return;
         }
-        if(tickCount >= 20){
-            tickCount = 0;
+
+        if(tickCount == 0){
             secondCount++;
             this.onSecond();
             if(!isLanded){
@@ -84,8 +106,6 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             for (int i = 0; i < entities.size(); i++) {
                 entities.get(i).setTicksLived(1);
             }
-        }else{
-            tickCount++;
         }
         this.onTick();
         playBoosterParticles();
@@ -186,8 +206,9 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             return;
         }
         if(currentVector.getY() < vector.getY()){
+            Vector newVector = currentVector.clone().add(new Vector(0, getSpeedReducer(), 0));
             for (Entity entity : entities) {
-                entity.setVelocity(currentVector.clone().add(new Vector(0, getSpeedReducer(), 0)));
+                entity.setVelocity(newVector);
             }
         }else{
             isReducingSpeed = false;
@@ -225,6 +246,12 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         this.isSpawned = false;
         this.isLanded = false;
         this.inventoryOpener = null;
+        this.secondCountLanded = 0;
+        this.secondBeforeSpawn = 0;
+        this.closestEntity = null;
+        this.inventoryOpener = null;
+        this.closestEntityForSoundBarrier = null;
+        this.isReducingSpeed = false;
         for (Entity e : entities) {
             e.remove();
         }
@@ -295,7 +322,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         spawn.setY(destination.getY()+spawn.getWorld().getMaxHeight());
         spawn.add(RANDOM.nextBoolean() ? RANDOM.nextInt(getRandomXZSpawnRange()) : -RANDOM.nextInt(getRandomXZSpawnRange()), 0
                 , RANDOM.nextBoolean() ? RANDOM.nextInt(getRandomXZSpawnRange()) : -RANDOM.nextInt(getRandomXZSpawnRange()));
-        this.vector = destination.toVector().subtract(spawn.toVector()).divide(new Vector(1000, 1000, 1000));
+        this.vector = destination.clone().toVector().subtract(spawn.toVector()).divide(new Vector(1000, 1000, 1000));
     }
 
     private Entity getClosest(){

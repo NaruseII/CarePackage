@@ -25,12 +25,6 @@ public final class ParticleUtils {
         return null;
     }
 
-    private static Class<?> getCBClass(String cbClassString) throws ClassNotFoundException {
-        String name = "org.bukkit.craftbukkit." + VERSION +cbClassString;
-        Class<?> nmsClass = Class.forName(name);
-        return nmsClass;
-    }
-
     private static Class getParticleClass(){
         if(DOUBLE_VERSION >= 1.13){
             return getNMSClass("Particles");
@@ -55,8 +49,8 @@ public final class ParticleUtils {
                 return constructor.newInstance(particle, true, x, y-yReduced, z, xOffset, yOffset, zOffset, speed, count);
             }
             Constructor constructor = getNMSClass("PacketPlayOutWorldParticles").getConstructor(getNMSClass("EnumParticle"), boolean.class, float.class,
-                    float.class, float.class, float.class, float.class, float.class, float.class, int.class);
-            return constructor.newInstance(particle, true, (float) x, (float) y-yReduced, (float) z, xOffset, yOffset, zOffset, speed, count);
+                    float.class, float.class, float.class, float.class, float.class, float.class, int.class, int[].class);
+            return constructor.newInstance(particle, true, (float) x, (float) y-yReduced, (float) z, xOffset, yOffset, zOffset, speed, count, new int[0]);
         }catch (Exception e){
             e.printStackTrace();
         }

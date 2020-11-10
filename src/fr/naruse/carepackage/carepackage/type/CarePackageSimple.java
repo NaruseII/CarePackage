@@ -6,20 +6,12 @@ import fr.naruse.carepackage.carepackage.ParticleInfo;
 import fr.naruse.carepackage.carepackage.Schedule;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.Utils;
-import net.minecraft.server.v1_12_R1.EnumParticle;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.inventory.Inventory;
 
 public class CarePackageSimple extends CarePackage {
-
-    private final ParticleInfo[] BOOSTERS_PARTICLES = new ParticleInfo[]{
-            new ParticleInfo(EnumParticle.FLAME, 8, 100),
-            new ParticleInfo(EnumParticle.EXPLOSION_LARGE, 1, 5),
-            new ParticleInfo(EnumParticle.SMOKE_LARGE, 1, 10),
-            new ParticleInfo(EnumParticle.SMOKE_NORMAL, 1, 20),
-    };
 
     public CarePackageSimple(CarePackagePlugin pl, String name, Location destination, Inventory inventory, int money, Schedule schedule) {
         super(pl, name, CarePackageType.SIMPLE, destination, inventory, money, schedule);
@@ -136,7 +128,7 @@ public class CarePackageSimple extends CarePackage {
 
     @Override
     protected ParticleInfo[] getBoosterParticle() {
-        return BOOSTERS_PARTICLES;
+        return boosterParticles;
     }
 
     @Override

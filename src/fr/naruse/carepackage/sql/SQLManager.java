@@ -3,10 +3,7 @@ package fr.naruse.carepackage.sql;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import fr.naruse.carepackage.carepackage.BlockInfo;
-import fr.naruse.carepackage.carepackage.CarePackageType;
-import fr.naruse.carepackage.carepackage.Model;
-import fr.naruse.carepackage.carepackage.ParticleInfo;
+import fr.naruse.carepackage.carepackage.*;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.dbapi.api.DatabaseAPI;
 import fr.naruse.dbapi.database.Database;
@@ -137,8 +134,7 @@ public class SQLManager {
     }
 
     public void saveModels(){
-        SQLRequest sqlRequest = new SQLRequest(SQLHelper.getTruncateRequest(TABLE_NAME));
-        database.prepareStatement(sqlRequest);
+        truncate();
 
         for (CarePackageType type : CarePackageType.values()) {
             if(type.getModel() == null){
@@ -186,5 +182,33 @@ public class SQLManager {
                 }
             }
         });
+    }
+
+    public void transformToSQL() {
+        truncate();
+        SQLResponse sqlResponse = new SQLResponse() {
+            @Override
+            public void runSynchronously(DBAPICore core, Object o) {
+                pl.getSqlManager().loadModels(true);
+            }
+        };
+        for (int i = 0; i < CarePackageType.values().size(); i++) {
+            CarePackageType type = CarePackageType.values().get(i);
+            if(type.getModel() == null){
+                continue;
+            }
+            String b64 = Base64.getEncoder().encodeToString(type.getModel().toJson(GSON).getBytes());
+            SQLRequest sqlRequest1 = new SQLRequest(SQLHelper.getInsertRequest(TABLE_NAME, ARGS), type.getName(), b64);
+            if(i == CarePackageType.values().size()-1){
+                database.prepareStatement(sqlRequest1, sqlResponse);
+            }else{
+                database.prepareStatement(sqlRequest1);
+            }
+        }
+    }
+
+    public void truncate(){
+        SQLRequest sqlRequest = new SQLRequest(SQLHelper.getTruncateRequest(TABLE_NAME));
+        database.prepareStatement(sqlRequest);
     }
 }

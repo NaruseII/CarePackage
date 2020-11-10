@@ -30,13 +30,14 @@ public final class WorldEditUtils {
                 return new Block[]{block, block1};
             }else{
                 Object session = worldEditPlugin.getClass().getMethod("getSession", Player.class).invoke(worldEditPlugin, p);
-                Object region = session.getClass().getMethod("getSelection", World.class).invoke(session, p.getWorld());
+                Object region = session.getClass().getMethod("getSelection", Class.forName("com.sk89q.worldedit.world.World")).invoke(session, session.getClass().getMethod("getSelectionWorld").invoke(session));
                 if(region == null){
                     return null;
                 }
                 Object min = region.getClass().getMethod("getMinimumPoint").invoke(region);
                 Object max = region.getClass().getMethod("getMaximumPoint").invoke(region);
                 Object world = region.getClass().getMethod("getWorld").invoke(region);
+                world = world.getClass().getMethod("getWorld").invoke(world);
                 Block block = (Block) world.getClass().getMethod("getBlockAt", int.class, int.class, int.class)
                         .invoke(world, getBlockValue(min, "X"), getBlockValue(min, "Y"), getBlockValue(min, "Z"));
                 Block block1 = (Block) world.getClass().getMethod("getBlockAt", int.class, int.class, int.class)

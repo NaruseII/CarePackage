@@ -2,6 +2,7 @@ name: CarePackage
 version: 1.0.0
 author: Naruse
 main: fr.naruse.carepackage.main.CarePackagePlugin
+softdepend: [Vault, WorldEdit]
 commands:
   cp:
   carepackage:

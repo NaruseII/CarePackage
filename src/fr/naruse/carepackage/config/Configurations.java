@@ -117,9 +117,10 @@ public class Configurations {
         File file = new File(carePackageModelFile, name+".yml");
         FileConfiguration configuration = new YamlConfiguration();
         try{
-            if(!file.exists()){
-                file.createNewFile();
+            if (file.exists()) {
+                file.delete();
             }
+            file.createNewFile();
             configuration.load(file);
             models.add(configuration);
             modelMap.put(name, configuration);
@@ -131,6 +132,11 @@ public class Configurations {
         return null;
     }
 
+    public boolean tryDelete(FileConfiguration fileConfiguration){
+        File file = configurationFile.get(fileConfiguration);
+        file.delete();
+        return false;
+    }
 
     public boolean tryDelete(String name){
         for (String s : modelMap.keySet()) {

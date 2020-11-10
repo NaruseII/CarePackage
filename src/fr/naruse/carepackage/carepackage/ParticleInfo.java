@@ -2,15 +2,17 @@ package fr.naruse.carepackage.carepackage;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import net.minecraft.server.v1_12_R1.EnumParticle;
-import net.minecraft.server.v1_12_R1.PacketPlayOutWorldParticles;
+import fr.naruse.carepackage.utils.ParticleUtils;
 import org.bukkit.Location;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
 import java.util.Map;
 
 public class ParticleInfo {
 
-    private final EnumParticle particle;
+    private final Object particle;
+    private final String particleName;
     private int count;
     private int originalCount;
     private final int percentage;
@@ -22,18 +24,19 @@ public class ParticleInfo {
     private float speed = 0;
     private boolean canBoost = false;
 
-    public ParticleInfo(EnumParticle particle, int count, int percentage) {
+    public ParticleInfo(String particleName, int count, int percentage) {
+        this.particleName = particleName;
         this.count = count;
         this.originalCount = count;
-        this.particle = particle;
+        this.particle = ParticleUtils.fromName(particleName);
         this.percentage = percentage;
-        if(particle == EnumParticle.FLAME){
+        if(particleName.equalsIgnoreCase("FLAME")){
             canBoost = true;
         }
     }
 
-    public ParticleInfo(EnumParticle particle, int count, int percentage, float xOffset, float yOffset, float zOffset, float speed, int yReduced, boolean boost) {
-       this(particle, count, percentage);
+    public ParticleInfo(String particleName, int count, int percentage, float xOffset, float yOffset, float zOffset, float speed, int yReduced, boolean boost) {
+       this(particleName, count, percentage);
        this.xOffset = xOffset;
        this.yOffset = yOffset;
        this.zOffset = zOffset;
@@ -42,9 +45,13 @@ public class ParticleInfo {
        this.canBoost = boost;
     }
 
-    public PacketPlayOutWorldParticles getParticlePacket(Location location){
-        return new PacketPlayOutWorldParticles(getParticle(), true, (float) location.getX(), (float) location.getY()-yReduced,
-                (float) location.getZ(), xOffset, yOffset, zOffset, speed, getCount());
+    public void playParticle(Location location, int particleViewRadius) {
+        Object object = ParticleUtils.buildPacket(particle, location.getX(), location.getY(), location.getZ(), xOffset, yOffset, zOffset, speed, count, yReduced);
+        for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, particleViewRadius, particleViewRadius, particleViewRadius)) {
+            if(nearbyEntity instanceof Player){
+                ParticleUtils.sendPacket(nearbyEntity, object);
+            }
+        }
     }
 
     public boolean canBoost() {
@@ -67,13 +74,14 @@ public class ParticleInfo {
         return percentage;
     }
 
-    public EnumParticle getParticle() {
-        return particle;
+    public String getParticleName() {
+        return particleName;
     }
 
     public String toJson(Gson gson) {
         Map<String, Object> map = Maps.newHashMap();
 
+        map.put("type", particleName);
         map.put("count", count+"");
         map.put("percentage", percentage+"");
         map.put("xOffset", xOffset+"");
@@ -90,7 +98,7 @@ public class ParticleInfo {
 
         public static ParticleInfo fromJson(Map<String, Object> map) {
 
-            EnumParticle particle = EnumParticle.valueOf((String) map.get("type"));
+            String particle = (String) map.get("type");
             int count = Integer.valueOf((String) map.get("count"));
             int percentage = Integer.valueOf((String) map.get("percentage"));
 
@@ -106,7 +114,7 @@ public class ParticleInfo {
         }
 
         public static ParticleInfo fromString(String format){
-            EnumParticle particle = EnumParticle.FLAME;
+            String particle = "FLAME";
             int count = 1;
             int percentage = 100;
             float xOffset = 0.2f;
@@ -119,7 +127,7 @@ public class ParticleInfo {
                 String[] args = s.split(":");
                 switch (args[0]){
                     case "type":
-                        particle = EnumParticle.valueOf(args[1]);
+                        particle = args[1].toUpperCase();
                         break;
                     case "count":
                         count = Integer.valueOf(args[1]);

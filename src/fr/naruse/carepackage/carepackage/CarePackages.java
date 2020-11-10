@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.ItemStackSerializer;
 import fr.naruse.carepackage.utils.Utils;
-import net.minecraft.server.v1_12_R1.EnumParticle;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;

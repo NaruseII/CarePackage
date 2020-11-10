@@ -2,10 +2,7 @@ package fr.naruse.carepackage.cmd;
 
 import com.google.common.collect.Lists;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import fr.naruse.carepackage.carepackage.CarePackage;
-import fr.naruse.carepackage.carepackage.CarePackageType;
-import fr.naruse.carepackage.carepackage.Model;
-import fr.naruse.carepackage.carepackage.ParticleInfo;
+import fr.naruse.carepackage.carepackage.*;
 import fr.naruse.carepackage.inventory.InventoryCPInfo;
 import fr.naruse.carepackage.inventory.InventoryModelInfo;
 import fr.naruse.carepackage.inventory.InventorySet;
@@ -34,16 +31,12 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
-        if(!(sender instanceof Player)){
-            return sendMessage(sender, "onlyForPlayers");
-        }
-        Player p = (Player) sender;
         if(args.length == 0){
             return help(sender, 1);
         }
 
         /// ADMIN
-        if(!p.hasPermission("cp.help")){
+        if(!sender.hasPermission("cp.help")){
             return sendMessage(sender, "youDontHaveThePermission");
         }
         if(args[0].equalsIgnoreCase("help")){
@@ -98,6 +91,10 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //SET DESTINATION
         if(args[0].equalsIgnoreCase("setDestination")){
+            if(!(sender instanceof Player)){
+                return sendMessage(sender, "onlyForPlayers");
+            }
+            Player p = (Player) sender;
             if(args.length < 2){
                 return help(sender, 1);
             }
@@ -170,6 +167,10 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //SET INVENTORY
         if(args[0].equalsIgnoreCase("setInventory")){
+            if(!(sender instanceof Player)){
+                return sendMessage(sender, "onlyForPlayers");
+            }
+            Player p = (Player) sender;
             if(args.length < 2){
                 return help(sender, 1);
             }
@@ -183,6 +184,10 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //CREATE MODEL
         if(args[0].equalsIgnoreCase("createModel")){
+            if(!(sender instanceof Player)){
+                return sendMessage(sender, "onlyForPlayers");
+            }
+            Player p = (Player) sender;
             if(args.length < 3){
                 return help(sender, 1);
             }
@@ -258,7 +263,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             args[1] = args[1].toUpperCase();
 
             CarePackageType carePackageType = CarePackageType.valueOf(args[1]);
-            if(carePackageType == null){
+            if(carePackageType == null || carePackageType.getModel() == null){
                 return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
 
@@ -492,6 +497,10 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //INFORMATION CP
         if(args[0].equalsIgnoreCase("informationCP")){
+            if(!(sender instanceof Player)){
+                return sendMessage(sender, "onlyForPlayers");
+            }
+            Player p = (Player) sender;
             if(args.length < 2){
                 return help(sender, 3);
             }
@@ -508,6 +517,10 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //INFORMATION MODEL
         if(args[0].equalsIgnoreCase("informationModel")){
+            if(!(sender instanceof Player)){
+                return sendMessage(sender, "onlyForPlayers");
+            }
+            Player p = (Player) sender;
             if(args.length < 2){
                 return help(sender, 3);
             }
@@ -521,13 +534,70 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
             return true;
         }
+
+        //TRANSFORM MODELS
+        if(args[0].equalsIgnoreCase("transformModels")){
+            if(args.length < 2){
+                return help(sender, 3);
+            }
+
+            if(pl.getSqlManager() == null){
+                return sendMessage(sender, "sqlNotFound");
+            }
+
+
+            if(args[1].equalsIgnoreCase("toSQl")){
+                pl.getConfigurations().saveConfigs();
+                pl.getSqlManager().transformToSQL();
+                for (FileConfiguration model : pl.getConfigurations().getModels()) {
+                    pl.getConfigurations().tryDelete(model);
+                }
+                CarePackageType.clear();
+                pl.getConfigurations().reload();
+            }else if(args[1].equalsIgnoreCase("toLocal")){
+                for (CarePackageType value : CarePackageType.values()) {
+                    if(value.getModel() == null){
+                        continue;
+                    }
+                    Model model = value.getModel();
+                    FileConfiguration configuration = pl.getConfigurations().createConfigurationModel(value.getName());
+                    configuration.set("name", model.getName());
+                    configuration.set("radius", model.getRadius());
+                    configuration.set("particleViewRadius", model.getProperty(Model.ModelProperty.PARTICLE_VIEW_RADIUS));
+                    configuration.set("soundBarrierEffectRadius", model.getProperty(Model.ModelProperty.SOUND_BARRIER_EFFECT_RADIUS));
+                    configuration.set("speedReducer", model.getProperty(Model.ModelProperty.SPEED_REDUCER));
+                    configuration.set("randomXZSpawnRange", model.getProperty(Model.ModelProperty.RANDOM_XZ_SPAWN_RANGE));
+                    configuration.set("secondBeforeRemove", model.getProperty(Model.ModelProperty.SECOND_BEFORE_REMOVE));
+                    configuration.set("timeBeforeBarrierEffect", model.getProperty(Model.ModelProperty.TIME_BEFORE_BARRIER_EFFECT));
+
+                    for (int i = 0; i < model.getBlockInfos().size(); i++) {
+                        BlockInfo blockInfo = model.getBlockInfos().get(i);
+
+                        configuration.set(i+".x", blockInfo.getX());
+                        configuration.set(i+".y", blockInfo.getY());
+                        configuration.set(i+".z", blockInfo.getZ());
+                        configuration.set(i+".type", blockInfo.getMaterial().getId());
+                        configuration.set(i+".data", blockInfo.getData());
+                    }
+                }
+                pl.getConfigurations().saveConfigs();
+                CarePackageType.clear();
+                pl.getConfigurations().reload();
+                pl.getCarePackages().reload();
+                pl.getSqlManager().truncate();
+            }else{
+                return help(sender, 3);
+            }
+
+            return sendMessage(sender, "modelsTransformed");
+        }
         return false;
     }
 
     private boolean help(CommandSender sender, int page){
         if(page == 1){
             sendNormalMessage(sender, "§6/§7cp help <[Page]>");
-            sendNormalMessage(sender, "§6/§7cp create <CarePackage Name> <CarePackage Type>");
+            sendNormalMessage(sender, "§6/§7cp create <CarePackage Name> <Model Name>");
             sendNormalMessage(sender, "§6/§7cp delete <CarePackage Name>");
             sendNormalMessage(sender, "§6/§7cp setDestination <CarePackage Name>");
             sendNormalMessage(sender, "§6/§7cp reload");
@@ -550,15 +620,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
         }else if(page == 3){
             sendNormalMessage(sender, "§6/§7cp informationModel <Model Name>");
             sendNormalMessage(sender, "§6/§7cp informationCP <CarePackage Name>");
-           /* sendNormalMessage(sender, "§6/§7cp list");
-            sendNormalMessage(sender, "§6/§7cp addModelParticle <Model Name> <Particle>");
-            sendNormalMessage(sender, "§6Ex: §e{type:FLAME, count:2, percentage:100, xOffset:0.2, yOffset:1, zOffset:0.2, speed:0, yReduced:1, boost:true}");
-            sendNormalMessage(sender, "§6/§7cp clearModelParticle <Model Name>");
-            sendNormalMessage(sender, "§6/§7cp setModelProperty <Model Name> <Property> <New Value>");
-            sendNormalMessage(sender, "§6/§7cp setReward <CarePackage Name> <Money>");
-            sendNormalMessage(sender, "§6/§7cp setSchedule <CarePackage Name> <Schedule>");
-            sendNormalMessage(sender, "§6Ex: §e{every:60, randomSpawn:80, broadcast:true}");
-            sendNormalMessage(sender, "§6/§7cp informationModel <Model Name>");*/
+            sendNormalMessage(sender, "§6/§7cp transformModels <ToSQL, ToLocal>");
             sendNormalMessage(sender, "§bPage: §23/3");
         }
         return true;
@@ -623,7 +685,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
         if(args.length == 2 && (args[0].equalsIgnoreCase("addModelParticle") || args[0].equalsIgnoreCase("clearModelParticle"))){
             fillList(list, args[1]);
         }
-        if(args.length == 2 && (args[0].equalsIgnoreCase("deleteModel") || args[0].equalsIgnoreCase("informationModel"))){
+        if(args.length == 2 && (args[0].equalsIgnoreCase("deleteModel") || args[0].equalsIgnoreCase("setInventory") || args[0].equalsIgnoreCase("informationModel"))){
             fillList(list, args[1]);
         }
         if(args.length == 2 && args[0].equalsIgnoreCase("setModelProperty")){

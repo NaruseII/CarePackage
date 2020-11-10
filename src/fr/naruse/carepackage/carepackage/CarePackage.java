@@ -2,15 +2,13 @@ package fr.naruse.carepackage.carepackage;
 
 import com.google.common.collect.Lists;
 import fr.naruse.carepackage.main.CarePackagePlugin;
+import fr.naruse.carepackage.utils.ParticleUtils;
 import fr.naruse.carepackage.utils.Utils;
 import fr.naruse.carepackage.utils.VaultUtils;
-import net.minecraft.server.v1_12_R1.EnumParticle;
-import net.minecraft.server.v1_12_R1.PacketPlayOutWorldParticles;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,6 +26,14 @@ import java.util.logging.Level;
 public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     protected final static Random RANDOM = new Random();
+
+
+    protected ParticleInfo[] boosterParticles = new ParticleInfo[]{
+            new ParticleInfo(ParticleUtils.getParticleNameFromNative("FLAME"), 8, 100),
+            new ParticleInfo(ParticleUtils.getParticleNameFromNative("EXPLOSION_LARGE"), 1, 5),
+            new ParticleInfo(ParticleUtils.getParticleNameFromNative("SMOKE_LARGE"), 1, 10),
+            new ParticleInfo(ParticleUtils.getParticleNameFromNative("SMOKE_NORMAL"), 1, 20),
+    };
 
     protected final CarePackagePlugin pl;
     protected final CarePackageType type;
@@ -268,11 +274,11 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             final int r = i;
             Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
                 for (Block block : Utils.getCircle(closestEntityForSoundBarrier.getLocation(), r)) {
-                    PacketPlayOutWorldParticles packet = new PacketPlayOutWorldParticles(EnumParticle.SMOKE_LARGE, true, (float) block.getX(), (float) block.getY()-1,
-                            (float) block.getZ(), 1, 0, 1, 0, 1);
+                    Object packet = ParticleUtils.buildPacket(ParticleUtils.fromName(ParticleUtils.getParticleNameFromNative("SMOKE_LARGE")), block.getX(), block.getY()-1,
+                            block.getZ(), 1f, 0f, 1f, 0f, 1, 1);
                     for (Entity nearbyEntity : closestEntityForSoundBarrier.getLocation().getWorld().getNearbyEntities(closestEntityForSoundBarrier.getLocation(), getParticleViewRadius(), getParticleViewRadius(), getParticleViewRadius())) {
                         if(nearbyEntity instanceof Player){
-                            ((CraftPlayer) nearbyEntity).getHandle().playerConnection.sendPacket(packet);
+                            ParticleUtils.sendPacket(nearbyEntity, packet);
                         }
                     }
                 }
@@ -287,12 +293,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
                 if(particleInfo.getPercentage() != 100 && RANDOM.nextInt(100)+1 > particleInfo.getPercentage()){
                     continue;
                 }
-                PacketPlayOutWorldParticles packet = particleInfo.getParticlePacket(location);
-                for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, getParticleViewRadius(), getParticleViewRadius(), getParticleViewRadius())) {
-                    if(nearbyEntity instanceof Player){
-                        ((CraftPlayer) nearbyEntity).getHandle().playerConnection.sendPacket(packet);
-                    }
-                }
+                particleInfo.playParticle(location, getParticleViewRadius());
             }
         }
     }

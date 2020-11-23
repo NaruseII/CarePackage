@@ -49,17 +49,7 @@ public class Configurations {
                     if(file.isFile() && file.getName().contains(".yml")){
                         FileConfiguration configuration = new YamlConfiguration();
                         configuration.load(file);
-                        if(configuration.getString("name") != null){
-                            CarePackageType type = CarePackageType.registerCarePackage(configuration.getString("name"));
-                            if(type == null){
-                                pl.getLogger().log(Level.SEVERE, "Can't register CarePackageType '"+configuration.getString("name")+"'");
-                            }else{
-                                pl.getLogger().log(Level.INFO, "CarePackageType '"+configuration.getString("name")+"' registered");
-                            }
-                        }
-                        models.add(configuration);
-                        modelMap.put(file.getName().replace(".yml", ""), configuration);
-                        configurationFile.put(configuration, file);
+                        registerCarePackage(file, configuration);
                     }
                 }
             }
@@ -111,6 +101,20 @@ public class Configurations {
             }
         }
         reload();
+    }
+
+    public void registerCarePackage(File configFile, FileConfiguration configuration){
+        if(configuration.getString("name") != null){
+            CarePackageType type = CarePackageType.registerCarePackage(configuration.getString("name"));
+            if(type == null){
+                pl.getLogger().log(Level.SEVERE, "Can't register CarePackageType '"+configuration.getString("name")+"'");
+            }else{
+                pl.getLogger().log(Level.INFO, "CarePackageType '"+configuration.getString("name")+"' registered");
+            }
+        }
+        models.add(configuration);
+        modelMap.put(configFile.getName().replace(".yml", ""), configuration);
+        configurationFile.put(configuration, configFile);
     }
 
     public FileConfiguration createConfigurationModel(String name) {

@@ -43,10 +43,14 @@ public final class Utils {
         try{
             Material m = Material.getMaterial(config.getInt(path+".type"));
             byte data = (byte) config.getInt(path+".data");
-            int x = config.getInt(path+".x");
-            int y = config.getInt(path+".y");
-            int z = config.getInt(path+".z");
-            return new BlockInfo(m, data, x, y, z);
+            double x = config.getDouble(path+".x");
+            double y = config.getDouble(path+".y");
+            double z = config.getDouble(path+".z");
+            int yaw = -1;
+            if(config.contains(path+".yaw")){
+                yaw = config.getInt(path+".yaw");
+            }
+            return new BlockInfo(m, data, x, y, z, yaw);
         }catch (Exception e){
             return null;
         }

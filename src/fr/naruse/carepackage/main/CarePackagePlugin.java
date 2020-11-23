@@ -1,5 +1,6 @@
 package fr.naruse.carepackage.main;
 
+import fr.naruse.carepackage.api.CarePackageAPI;
 import fr.naruse.carepackage.carepackage.CarePackage;
 import fr.naruse.carepackage.carepackage.CarePackages;
 import fr.naruse.carepackage.cmd.CarePackageCommand;
@@ -18,6 +19,12 @@ public class CarePackagePlugin extends JavaPlugin {
     private SQLManager sqlManager;
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+        CarePackageAPI.loadAPI(this);
+    }
+
+    @Override
     public void onEnable() {
         super.onEnable();
 
@@ -33,7 +40,6 @@ public class CarePackagePlugin extends JavaPlugin {
         }
 
         getCommand("cp").setExecutor(new CarePackageCommand(this));
-        getCommand("carepackage").setExecutor(new CarePackageCommand(this));
     }
 
     @Override

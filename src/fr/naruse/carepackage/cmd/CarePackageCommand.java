@@ -2,6 +2,7 @@ package fr.naruse.carepackage.cmd;
 
 import com.google.common.collect.Lists;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import fr.naruse.carepackage.api.CarePackageAPI;
 import fr.naruse.carepackage.carepackage.*;
 import fr.naruse.carepackage.inventory.InventoryCPInfo;
 import fr.naruse.carepackage.inventory.InventoryModelInfo;
@@ -95,6 +96,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                 return sendMessage(sender, "onlyForPlayers");
             }
             Player p = (Player) sender;
+
             if(args.length < 2){
                 return help(sender, 1);
             }
@@ -114,13 +116,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
 
         //RELOAD
         if(args[0].equalsIgnoreCase("reload")){
-            CarePackageType.clear();
-            pl.getConfigurations().reload();
-            if(pl.getSqlManager() != null){
-                pl.getSqlManager().loadModels(true);
-            }else{
-                pl.getCarePackages().reload();
-            }
+            CarePackageAPI.reload();
             return sendMessage(sender, "reloaded");
         }
 
@@ -578,6 +574,9 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
                         configuration.set(i+".z", blockInfo.getZ());
                         configuration.set(i+".type", blockInfo.getMaterial().getId());
                         configuration.set(i+".data", blockInfo.getData());
+                        if(blockInfo.getYaw() != -1){
+                            configuration.set(i+".yaw", blockInfo.getYaw());
+                        }
                     }
                 }
                 pl.getConfigurations().saveConfigs();

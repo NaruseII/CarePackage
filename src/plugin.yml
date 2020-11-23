@@ -1,8 +1,9 @@
 name: CarePackage
-version: 1.0.0
+version: 1.0.1
 author: Naruse
 main: fr.naruse.carepackage.main.CarePackagePlugin
 softdepend: [Vault, WorldEdit]
 commands:
   cp:
-  carepackage:
+    description: "CarePackage's commands"
+    aliases: [carepackage]

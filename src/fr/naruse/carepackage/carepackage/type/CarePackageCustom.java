@@ -11,7 +11,7 @@ import org.bukkit.inventory.Inventory;
 
 public class CarePackageCustom extends CarePackage {
 
-    private final Model model;
+    protected final Model model;
 
     public CarePackageCustom(CarePackagePlugin pl, String name, CarePackageType type, Location destination, Inventory inventory, Model model,
                              int money, Schedule schedule) {
@@ -29,7 +29,14 @@ public class CarePackageCustom extends CarePackage {
         for (int i = 0; i < model.getBlockInfos().size(); i++) {
             BlockInfo blockInfo = model.getBlockInfos().get(i);
             if(blockInfo.getMaterial() != Material.BARRIER){
-                Entity e = createFallingBlock(spawn.clone().add(blockInfo.getX(), blockInfo.getY(), blockInfo.getZ()), blockInfo.getMaterial(), blockInfo.getData());
+                Location location = spawn.clone().add(blockInfo.getX(), blockInfo.getY(), blockInfo.getZ());
+                Entity e;
+                if(blockInfo.getYaw() != -1){
+                    location.setYaw(blockInfo.getYaw());
+                    e = createArmorStand(location, blockInfo.getMaterial(), blockInfo.getData());
+                }else{
+                    e = createFallingBlock(location, blockInfo.getMaterial(), blockInfo.getData());
+                }
                 double d = Utils.distanceXZ(e.getLocation(), spawn);
                 if(d < distance){
                     distance = d;
@@ -37,6 +44,10 @@ public class CarePackageCustom extends CarePackage {
                 }
             }
         }
+        loadBoosters();
+    }
+    
+    protected void loadBoosters(){
         for (int i = 0; i < model.getBlockInfos().size(); i++) {
             BlockInfo blockInfo = model.getBlockInfos().get(i);
             if(blockInfo.getMaterial() == Material.BARRIER){

@@ -55,11 +55,11 @@ public class CarePackageType {
                 if(model == null){
                     return null;
                 }
-                Constructor<CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(),
+                Constructor<? extends CarePackageCustom> constructor = clazz.getConstructor(pl.getClass(), String.class, getClass(),
                         Location.class, Inventory.class, Model.class, int.class, Schedule.class);
                 return constructor.newInstance(pl, name, this, location, inventory, model, money, schedule);
             }else{
-                Constructor<CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class, int.class,
+                Constructor<? extends CarePackage> constructor = clazz.getConstructor(pl.getClass(), String.class, Location.class, Inventory.class, int.class,
                         Schedule.class);
                 return constructor.newInstance(pl, name, location, inventory, money, schedule);
             }
@@ -79,14 +79,16 @@ public class CarePackageType {
         this.model = model;
     }
 
-
-
     public static CarePackageType registerCarePackage(String name){
+        return registerCarePackage(name, CarePackageCustom.class);
+    }
+
+    public static CarePackageType registerCarePackage(String name, Class<? extends CarePackage> clazz){
         name = name.toUpperCase();
         if(carePackageTypeMap.containsKey(name)){
             return null;
         }
-        CarePackageType carePackageType = new CarePackageType(CarePackageCustom.class, name, true);
+        CarePackageType carePackageType = new CarePackageType(clazz, name, true);
         carePackageTypeMap.put(name, carePackageType);
         carePackageTypes.add(carePackageType);
         return carePackageType;

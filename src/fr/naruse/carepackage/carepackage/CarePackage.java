@@ -1,6 +1,9 @@
 package fr.naruse.carepackage.carepackage;
 
 import com.google.common.collect.Lists;
+import fr.naruse.carepackage.api.event.CarePackageDestroyEvent;
+import fr.naruse.carepackage.api.event.CarePackageSpawnEvent;
+import fr.naruse.carepackage.api.event.PlayerOpenCarePackageEvent;
 import fr.naruse.carepackage.main.CarePackagePlugin;
 import fr.naruse.carepackage.utils.ParticleUtils;
 import fr.naruse.carepackage.utils.Utils;
@@ -234,6 +237,9 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
     }
 
     public int spawn() {
+        if(isCancelled()){
+            return 1;
+        }
         if(isSpawned){
             return 1;
         }
@@ -243,12 +249,21 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             pl.getLogger().log(Level.INFO, "Can't spawn '"+type.getName()+"'");
             return 2;
         }
+
+        CarePackageSpawnEvent event = new CarePackageSpawnEvent(this);
+        Bukkit.getPluginManager().callEvent(event);
+
+        if(event.isCancelled()){
+            return 2;
+        }
+
         buildEntities();
         this.closestEntity = getClosest();
         return 0;
     }
 
     public void destroy(){
+        Bukkit.getPluginManager().callEvent(new CarePackageDestroyEvent(this));
         this.isSpawned = false;
         this.isLanded = false;
         this.inventoryOpener = null;
@@ -369,9 +384,14 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     @EventHandler
     public void interact(PlayerInteractAtEntityEvent e){
-        if(e.getRightClicked() != null && entities.contains(e.getRightClicked())){
+        if(e.getRightClicked() != null && e.getRightClicked() instanceof Player && entities.contains(e.getRightClicked())){
             e.setCancelled(true);
             if(isLanded){
+                PlayerOpenCarePackageEvent event = new PlayerOpenCarePackageEvent((Player) e.getRightClicked(), this, inventoryOpener == null);
+                Bukkit.getPluginManager().callEvent(event);
+                if(event.isCancelled()){
+                    return;
+                }
                 if(inventoryOpener == null){
                     if(money != 0){
                         if(VaultUtils.get().giveReward(e.getPlayer(), money)){

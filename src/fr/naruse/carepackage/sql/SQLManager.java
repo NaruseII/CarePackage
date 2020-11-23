@@ -61,7 +61,7 @@ public class SQLManager {
                         String name = set.getString("name");
                         String b64 = set.getString("properties");
 
-                        processDecode(name, b64);
+                        processDecode(name, b64, true);
                     }
                     pl.getCarePackages().reload();
                     if(saveModels){
@@ -74,8 +74,8 @@ public class SQLManager {
         });
     }
 
-    private void processDecode(String name, String b64) {
-        String properties = new String(Base64.getDecoder().decode(b64));
+    public void processDecode(String name, String json, boolean isb64Encoded) {
+        String properties = isb64Encoded ? new String(Base64.getDecoder().decode(json)) : json;
         Map<String, Object> map = GSON.fromJson(properties, MAP_TYPE);
 
         int radius = Integer.valueOf((String) map.get("radius"));

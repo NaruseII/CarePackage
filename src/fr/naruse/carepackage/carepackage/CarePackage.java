@@ -118,6 +118,7 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         }
         this.onTick();
         playBoosterParticles();
+        checkCrash();
     }
 
     protected abstract void buildEntities();
@@ -187,12 +188,21 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
         }
     }
 
-
     private void setParticleCount(int count){
         for (ParticleInfo particleInfo : getBoosterParticle()) {
             if(particleInfo.canBoost()){
                 particleInfo.setCount(count);
             }
+        }
+    }
+
+    private void checkCrash(){
+        Location location = closestEntity.getLocation();
+        double distance = Utils.distanceY(location, destination);
+        if(distance < 0.4){
+            setParticleCount(6);
+            setSpeed(new Vector(0, 0, 0));
+            isLanded = true;
         }
     }
 
@@ -384,10 +394,10 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
 
     @EventHandler
     public void interact(PlayerInteractAtEntityEvent e){
-        if(e.getRightClicked() != null && e.getRightClicked() instanceof Player && entities.contains(e.getRightClicked())){
+        if(e.getRightClicked() != null && entities.contains(e.getRightClicked())){
             e.setCancelled(true);
             if(isLanded){
-                PlayerOpenCarePackageEvent event = new PlayerOpenCarePackageEvent((Player) e.getRightClicked(), this, inventoryOpener == null);
+                PlayerOpenCarePackageEvent event = new PlayerOpenCarePackageEvent(e.getPlayer(), this, inventoryOpener == null);
                 Bukkit.getPluginManager().callEvent(event);
                 if(event.isCancelled()){
                     return;

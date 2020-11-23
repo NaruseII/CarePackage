@@ -1,5 +1,9 @@
 package fr.naruse.carepackage.carepackage;
 
+import fr.naruse.carepackage.api.CarePackageAPI;
+
+import java.util.logging.Level;
+
 public class Schedule {
 
     private final int every;
@@ -27,25 +31,30 @@ public class Schedule {
     public static class Builder {
 
         public static Schedule fromString(String format) {
-            int every = 1;
-            int randomPercentage = 80;
-            boolean broadcast = true;
-            for (String s : format.replace("{", "").replace("}", "").split(",")) {
-                String[] args = s.split(":");
-                switch (args[0]){
-                    case "every":
-                        every = Integer.valueOf(args[1]);
-                        break;
-                    case "randomSpawn":
-                        randomPercentage = Integer.valueOf(args[1]);
-                        break;
-                    case "broadcast":
-                        broadcast = Boolean.valueOf(args[1]);
-                        break;
+            try{
+                int every = 1;
+                int randomPercentage = 80;
+                boolean broadcast = true;
+                for (String s : format.replace("{", "").replace("}", "").split(",")) {
+                    String[] args = s.split(":");
+                    switch (args[0]){
+                        case "every":
+                            every = Integer.valueOf(args[1]);
+                            break;
+                        case "randomSpawn":
+                            randomPercentage = Integer.valueOf(args[1]);
+                            break;
+                        case "broadcast":
+                            broadcast = Boolean.valueOf(args[1]);
+                            break;
+                    }
                 }
+                return new Schedule(every, randomPercentage, broadcast);
+            }catch (Exception e){
+                CarePackageAPI.getCarePackagePlugin().getLogger().log(Level.SEVERE, "Schedule badly configured '"+format+"'");
+                e.printStackTrace();
+                return null;
             }
-
-            return new Schedule(every, randomPercentage, broadcast);
         }
 
     }

@@ -8,9 +8,13 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.util.NumberConversions;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public final class Utils {
 
@@ -93,6 +97,38 @@ public final class Utils {
             }
         }
         return blocks;
+    }
+
+    public static Stream<Player> getNearbyPlayers(Location location, double x, double y, double z){
+        return Bukkit.getOnlinePlayers().stream().filter(entity -> distanceSquared(entity.getLocation(), location, Axis.X) <= NumberConversions.square(x)
+                && distanceSquared(entity.getLocation(), location, Axis.Y) <= NumberConversions.square(y)
+                && distanceSquared(entity.getLocation(), location, Axis.Z) <= NumberConversions.square(z)).map((Function<Player, Player>) player -> player);
+    }
+
+    public static Stream<Entity> getNearbyEntities(Location location, double x, double y, double z){
+        return location.getWorld().getEntities().stream().filter(entity -> distanceSquared(entity.getLocation(), location, Axis.X) <= NumberConversions.square(x)
+                && distanceSquared(entity.getLocation(), location, Axis.Y) <= NumberConversions.square(y)
+                && distanceSquared(entity.getLocation(), location, Axis.Z) <= NumberConversions.square(z));
+    }
+
+    public static double distanceSquared(Location o, Location b, Axis axis) {
+        if (o == null) {
+            return Integer.MAX_VALUE;
+        } else if (o.getWorld() != null && b.getWorld() != null) {
+            if (o.getWorld() != b.getWorld()) {
+                return Integer.MAX_VALUE;
+            } else {
+                return axis == Axis.X ? NumberConversions.square(b.getX() - o.getX()) : axis == Axis.Y ? NumberConversions.square(b.getY() - o.getY()) : NumberConversions.square(b.getZ() - o.getZ());
+            }
+        } else {
+            return Integer.MAX_VALUE;
+        }
+    }
+
+    public enum Axis {
+
+        X, Y, Z
+
     }
 
 

@@ -7,6 +7,7 @@ import fr.naruse.carepackage.cmd.CarePackageCommand;
 import fr.naruse.carepackage.config.Configurations;
 import fr.naruse.carepackage.sql.SQLManager;
 import fr.naruse.carepackage.manager.MessageManager;
+import fr.naruse.carepackage.thread.ThreadGlobal;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -40,6 +41,8 @@ public class CarePackagePlugin extends JavaPlugin {
         }
 
         getCommand("cp").setExecutor(new CarePackageCommand(this));
+
+        ThreadGlobal.launch();
     }
 
     @Override
@@ -48,6 +51,7 @@ public class CarePackagePlugin extends JavaPlugin {
         for (CarePackage carePackage : carePackages.getCarePackages()) {
             carePackage.disable();
         }
+        ThreadGlobal.shutdown();
     }
 
     public Configurations getConfigurations() {

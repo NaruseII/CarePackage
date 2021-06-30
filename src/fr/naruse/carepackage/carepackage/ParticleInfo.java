@@ -3,11 +3,13 @@ package fr.naruse.carepackage.carepackage;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 import fr.naruse.carepackage.utils.ParticleUtils;
+import fr.naruse.carepackage.utils.Utils;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class ParticleInfo {
 
@@ -47,11 +49,7 @@ public class ParticleInfo {
 
     public void playParticle(Location location, int particleViewRadius) {
         Object object = ParticleUtils.buildPacket(particle, location.getX(), location.getY(), location.getZ(), xOffset, yOffset, zOffset, speed, count, yReduced);
-        for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location, particleViewRadius, particleViewRadius, particleViewRadius)) {
-            if(nearbyEntity instanceof Player){
-                ParticleUtils.sendPacket(nearbyEntity, object);
-            }
-        }
+        Utils.getNearbyPlayers(location, particleViewRadius, particleViewRadius, particleViewRadius).forEach(player -> ParticleUtils.sendPacket(player, object));
     }
 
     public boolean canBoost() {

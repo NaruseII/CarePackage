@@ -522,7 +522,7 @@ public class CarePackageCommand implements CommandExecutor, TabCompleter {
             }
 
             CarePackageType type = CarePackageType.valueOf(args[1].toUpperCase());
-            if(type == null){
+            if(type == null || type == CarePackageType.SIMPLE){
                 return sendMessage(sender, "modelNotFound", new String[]{"name"}, new String[]{args[1]});
             }
 

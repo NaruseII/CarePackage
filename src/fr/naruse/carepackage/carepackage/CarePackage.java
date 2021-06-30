@@ -5,6 +5,7 @@ import fr.naruse.carepackage.api.event.CarePackageDestroyEvent;
 import fr.naruse.carepackage.api.event.CarePackageSpawnEvent;
 import fr.naruse.carepackage.api.event.PlayerOpenCarePackageEvent;
 import fr.naruse.carepackage.main.CarePackagePlugin;
+import fr.naruse.carepackage.thread.CollectionManager;
 import fr.naruse.carepackage.utils.ParticleUtils;
 import fr.naruse.carepackage.utils.Utils;
 import fr.naruse.carepackage.utils.VaultUtils;
@@ -24,6 +25,7 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public abstract class CarePackage extends BukkitRunnable implements Listener {
@@ -295,32 +297,33 @@ public abstract class CarePackage extends BukkitRunnable implements Listener {
             return;
         }
 
-        for (int i = 0; i < getSoundBarrierEffectRadius(); i++) {
-            final int r = i;
-            Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
-                for (Block block : Utils.getCircle(closestEntityForSoundBarrier.getLocation(), r)) {
-                    Object packet = ParticleUtils.buildPacket(ParticleUtils.fromName(ParticleUtils.getParticleNameFromNative("SMOKE_LARGE")), block.getX(), block.getY()-1,
-                            block.getZ(), 1f, 0f, 1f, 0f, 1, 1);
-                    for (Entity nearbyEntity : closestEntityForSoundBarrier.getLocation().getWorld().getNearbyEntities(closestEntityForSoundBarrier.getLocation(), getParticleViewRadius(), getParticleViewRadius(), getParticleViewRadius())) {
-                        if(nearbyEntity instanceof Player){
-                            ParticleUtils.sendPacket(nearbyEntity, packet);
-                        }
+        CollectionManager.SECOND_THREAD_RUNNABLE_SET.add(() -> {
+            for (int i = 0; i < getSoundBarrierEffectRadius(); i++) {
+                final int r = i;
+                Bukkit.getScheduler().scheduleSyncDelayedTask(pl, () -> {
+                    for (Block block : Utils.getCircle(closestEntityForSoundBarrier.getLocation(), r)) {
+                        Object packet = ParticleUtils.buildPacket(ParticleUtils.fromName(ParticleUtils.getParticleNameFromNative("SMOKE_LARGE")), block.getX(), block.getY()-1,
+                                block.getZ(), 1f, 0f, 1f, 0f, 1, 1);
+
+                        Utils.getNearbyPlayers(closestEntityForSoundBarrier.getLocation(), getParticleViewRadius(), getParticleViewRadius(), getParticleViewRadius()).forEach(entity -> ParticleUtils.sendPacket(entity, packet));
                     }
-                }
-            }, 1*i);
-        }
+                }, 1*i);
+            }
+        });
     }
 
     protected void playBoosterParticles() {
-        for (int i = 0; i < boosters.size(); i++) {
-            Location location = boosters.get(i).getLocation();
-            for (ParticleInfo particleInfo : getBoosterParticle()) {
-                if(particleInfo.getPercentage() != 100 && RANDOM.nextInt(100)+1 > particleInfo.getPercentage()){
-                    continue;
+        CollectionManager.SECOND_THREAD_RUNNABLE_SET.add(() -> {
+            for (int i = 0; i < boosters.size(); i++) {
+                Location location = boosters.get(i).getLocation();
+                for (ParticleInfo particleInfo : getBoosterParticle()) {
+                    if(particleInfo.getPercentage() != 100 && RANDOM.nextInt(100)+1 > particleInfo.getPercentage()){
+                        continue;
+                    }
+                    particleInfo.playParticle(location, getParticleViewRadius());
                 }
-                particleInfo.playParticle(location, getParticleViewRadius());
             }
-        }
+        });
     }
 
     protected boolean canSpawn(){

@@ -10,7 +10,7 @@ public final class ParticleUtils {
     private static final String VERSION = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
     private static final double DOUBLE_VERSION;
     static {
-        String version = VERSION.replace("v", "").replace("R1", "").replace("R2", "").replace("_", ".");
+        String version = VERSION.replace("v", "").replace("R1", "").replace("R2", "").replace("_", ".").replace("R3", "");
         DOUBLE_VERSION = Double.valueOf(version.trim().substring(0, version.length()-2));
     }
 
